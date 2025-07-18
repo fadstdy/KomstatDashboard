@@ -33,7 +33,7 @@ source("modules/regresi_linear_module.R")
 # --- Pemuatan Data Langsung dari file gabungan ---
 # Asumsi data_sovi.csv sudah berisi semua kolom yang dibutuhkan (termasuk CITY_NAME, PROVINCE_NAME)
 # Asumsi data_sovi.csv berada di direktori utama proyek, atau di folder data/
-data_path <- "data_sovi.csv" # <--- Sesuaikan PATH ini jika file Anda di tempat lain
+data_path <- "data/data_sovi.csv" # <--- Sesuaikan PATH ini jika file Anda di tempat lain
 # Contoh jika di folder 'data': data_path <- "data/data_sovi.csv"
 
 # Periksa apakah file ada, jika tidak, berikan peringatan atau hentikan aplikasi

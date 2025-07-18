@@ -1,4 +1,4 @@
-# Uji Asumsi Module
+# Uji Asumsi Module - IMPROVED VERSION
 # modules/uji_asumsi_module.R
 
 # UI function for Uji Asumsi
@@ -33,7 +33,20 @@ ujiAsumsiUI <- function(id) {
                ns = ns,
                selectInput(ns("group_variable_homogeneity"), 
                            "Variabel Pengelompokan:",
-                           choices = NULL)
+                           choices = NULL),
+              
+               
+               # TAMBAHAN: Checkbox untuk filter kelompok
+               conditionalPanel(
+                 condition = "output.show_group_filter == true",
+                 ns = ns,
+                 checkboxInput(ns("filter_small_groups"), 
+                               "Filter kelompok dengan data < 3", 
+                               value = TRUE),
+                 numericInput(ns("min_group_size"), 
+                              "Minimal data per kelompok:", 
+                              value = 3, min = 2, max = 10)
+               )
              ),
              
              # Tingkat Signifikansi
@@ -106,16 +119,77 @@ ujiAsumsiUI <- function(id) {
 ujiAsumsiServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
     
+    # TAMBAHAN: Fungsi untuk validasi kelompok
+    validate_group_variable <- function(data, group_var) {
+      if (is.null(group_var) || group_var == "") return(NULL)
+      
+      # Hitung ukuran kelompok
+      group_sizes <- table(data[[group_var]])
+      
+      return(list(
+        n_groups = length(group_sizes),
+        min_size = min(group_sizes),
+        max_size = max(group_sizes),
+        mean_size = round(mean(group_sizes), 1),
+        small_groups = sum(group_sizes < 3),
+        group_sizes = group_sizes
+      ))
+    }
+    
+    # TAMBAHAN: Filter variabel pengelompokan yang valid
+    get_valid_grouping_vars <- function(data) {
+      categorical_vars <- get_categorical_vars(data)
+      
+      valid_vars <- sapply(categorical_vars, function(var) {
+        if (!var %in% names(data)) return(FALSE)
+        
+        group_counts <- table(data[[var]])
+        n_groups <- length(group_counts)
+        min_group_size <- min(group_counts)
+        
+        # Kriteria: 2-50 kelompok, minimal 2 observasi per kelompok
+        return(n_groups >= 2 && n_groups <= 50 && min_group_size >= 2)
+      })
+      
+      return(categorical_vars[valid_vars])
+    }
+    
     # Perbarui pilihan variabel
     observe({
       numeric_vars <- get_numeric_vars(values$current_data)
-      categorical_vars <- get_categorical_vars(values$current_data)
+      valid_grouping_vars <- get_valid_grouping_vars(values$current_data)
       
       updateSelectInput(session, "test_variable", 
                         choices = setNames(numeric_vars, numeric_vars))
-      updateSelectInput(session, "group_variable_homogeneity", 
-                        choices = setNames(categorical_vars, categorical_vars))
+      
+      # PERBAIKAN: Hanya tampilkan variabel pengelompokan yang valid
+      if (length(valid_grouping_vars) > 0) {
+        # Tambahkan info jumlah kelompok di label
+        var_labels <- sapply(valid_grouping_vars, function(var) {
+          n_groups <- length(unique(values$current_data[[var]]))
+          paste0(var, " (", n_groups, " kelompok)")
+        })
+        
+        updateSelectInput(session, "group_variable_homogeneity", 
+                          choices = setNames(c("", valid_grouping_vars), 
+                                             c("-- Pilih Variabel --", var_labels)))
+      } else {
+        updateSelectInput(session, "group_variable_homogeneity", 
+                          choices = list("-- Tidak ada variabel pengelompokan yang valid --" = ""))
+      }
     })
+    
+    # TAMBAHAN: Validasi real-time untuk variabel pengelompokan
+    output$show_group_filter <- reactive({
+      if (is.null(input$group_variable_homogeneity) || input$group_variable_homogeneity == "") {
+        return(FALSE)
+      }
+      
+      validation <- validate_group_variable(values$current_data, input$group_variable_homogeneity)
+      return(!is.null(validation) && validation$small_groups > 0)
+    })
+    outputOptions(output, "show_group_filter", suspendWhenHidden = FALSE)
+    
     
     # Nilai reaktif untuk menyimpan hasil uji
     assumption_results <- reactiveValues(
@@ -174,6 +248,11 @@ ujiAsumsiServer <- function(id, values) {
         # Uji Homogenitas Variansi (Levene's Test)
         req(input$group_variable_homogeneity)
         
+        if (input$group_variable_homogeneity == "") {
+          showNotification("Silakan pilih variabel pengelompokan untuk uji homogenitas.", type = "warning")
+          return()
+        }
+        
         variable_to_test <- data[[input$test_variable]]
         group_variable <- data[[input$group_variable_homogeneity]]
         
@@ -189,40 +268,69 @@ ujiAsumsiServer <- function(id, values) {
           return()
         }
         
-        # Pastikan ada setidaknya 2 kelompok yang berbeda
-        if (length(unique(complete_data$Group)) < 2) {
-          showNotification("Variabel pengelompokan harus memiliki minimal dua kategori untuk uji homogenitas.", type = "warning")
-          assumption_results$test_output <- "Variabel pengelompokan tidak cukup."
-          assumption_results$test_plot <- NULL
-          assumption_results$interpretation <- "Tidak dapat menjalankan uji homogenitas karena variabel pengelompokan memiliki kurang dari 2 kategori."
+        # PERBAIKAN: Validasi kelompok
+        group_counts <- table(complete_data$Group)
+        
+        # Filter kelompok kecil jika diperlukan
+        if (input$filter_small_groups && any(group_counts < input$min_group_size)) {
+          valid_groups <- names(group_counts)[group_counts >= input$min_group_size]
+          complete_data <- complete_data[complete_data$Group %in% valid_groups, ]
+          complete_data$Group <- droplevels(complete_data$Group)
+          
+          n_removed <- length(group_counts) - length(valid_groups)
+          showNotification(paste("Kelompok dengan data <", input$min_group_size, "telah difilter.", n_removed, "kelompok dihapus."), type = "message")
+        }
+        
+        # Periksa ulang setelah filtering
+        group_counts_final <- table(complete_data$Group)
+        if (length(group_counts_final) < 2) {
+          showNotification("Setelah filtering, tidak tersisa cukup kelompok untuk uji homogenitas (minimal 2 kelompok).", type = "error")
+          return()
+        }
+        
+        if (any(group_counts_final < 2)) {
+          showNotification("Masih ada kelompok dengan data < 2. Uji homogenitas tidak dapat dilakukan.", type = "error")
           return()
         }
         
         # Menggunakan Levene's Test dari paket 'car'
-        levene_test <- car::leveneTest(Value ~ Group, data = complete_data)
-        assumption_results$test_output <- levene_test
-        
-        # Visualisasi (Boxplot per kelompok)
-        assumption_results$test_plot <- ggplot(complete_data, aes(x = Group, y = Value)) +
-          geom_boxplot(fill = "lightgreen", alpha = 0.7) +
-          labs(title = paste("Boxplot Variansi:", input$test_variable, "berdasarkan", input$group_variable_homogeneity),
-               x = input$group_variable_homogeneity, y = input$test_variable) +
-          theme_custom()
-        
-        assumption_results$interpretation <- paste(
-          "INTERPRETASI UJI HOMOGENITAS VARIANSI (LEVENES TEST):\n",
-          "=================================================\n\n",
-          "Hipotesis:\n",
-          "H0: Variansi antar kelompok adalah sama (homogen)\n",
-          "H1: Minimal ada satu variansi kelompok yang berbeda (heterogen)\n\n",
-          "Hasil Levene's Test:\n",
-          "- F-statistik:", round(levene_test$`F value`[1], 4), "\n",
-          "- df1:", levene_test$Df[1], "\n",
-          "- df2:", levene_test$Df[2], "\n",
-          "- p-value:", format_p_value(levene_test$`Pr(>F)`[1]), "\n\n",
-          "Kesimpulan:\n",
-          interpret_homogeneity(levene_test$`Pr(>F)`[1], alpha)
-        )
+        tryCatch({
+          levene_test <- car::leveneTest(Value ~ Group, data = complete_data)
+          assumption_results$test_output <- levene_test
+          
+          # Visualisasi (Boxplot per kelompok)
+          assumption_results$test_plot <- ggplot(complete_data, aes(x = Group, y = Value)) +
+            geom_boxplot(fill = "lightgreen", alpha = 0.7) +
+            labs(title = paste("Boxplot Variansi:", input$test_variable, "berdasarkan", input$group_variable_homogeneity),
+                 subtitle = paste("Jumlah kelompok:", length(group_counts_final)),
+                 x = input$group_variable_homogeneity, y = input$test_variable) +
+            theme_custom() +
+            theme(axis.text.x = element_text(angle = 45, hjust = 1))
+          
+          assumption_results$interpretation <- paste(
+            "INTERPRETASI UJI HOMOGENITAS VARIANSI (LEVENES TEST):\n",
+            "=================================================\n\n",
+            "Variabel Pengelompokan:", input$group_variable_homogeneity, "\n",
+            "Jumlah Kelompok yang Dianalisis:", length(group_counts_final), "\n",
+            "Ukuran Kelompok: ", min(group_counts_final), "-", max(group_counts_final), " observasi\n\n",
+            "Hipotesis:\n",
+            "H0: Variansi antar kelompok adalah sama (homogen)\n",
+            "H1: Minimal ada satu variansi kelompok yang berbeda (heterogen)\n\n",
+            "Hasil Levene's Test:\n",
+            "- F-statistik:", round(levene_test$`F value`[1], 4), "\n",
+            "- df1:", levene_test$Df[1], "\n",
+            "- df2:", levene_test$Df[2], "\n",
+            "- p-value:", format_p_value(levene_test$`Pr(>F)`[1]), "\n\n",
+            "Kesimpulan:\n",
+            interpret_homogeneity(levene_test$`Pr(>F)`[1], alpha)
+          )
+          
+        }, error = function(e) {
+          showNotification(paste("Error dalam uji Levene:", e$message), type = "error")
+          assumption_results$test_output <- paste("Error:", e$message)
+          assumption_results$test_plot <- NULL
+          assumption_results$interpretation <- "Uji homogenitas gagal dilakukan. Periksa data dan variabel pengelompokan."
+        })
       }
     })
     
@@ -244,7 +352,7 @@ ujiAsumsiServer <- function(id, values) {
       assumption_results$interpretation
     })
     
-    # Handler Download Hasil Uji
+    # Handler Download (sama seperti sebelumnya)
     output$download_test_results <- downloadHandler(
       filename = function() {
         paste("hasil_uji_asumsi_", input$test_type, "_", Sys.Date(), ".txt", sep = "")
@@ -256,7 +364,6 @@ ujiAsumsiServer <- function(id, values) {
       }
     )
     
-    # Handler Download Plot Asumsi
     output$download_plot_assumption <- downloadHandler(
       filename = function() {
         paste("plot_uji_asumsi_", input$test_type, "_", Sys.Date(), ".png", sep = "")
@@ -268,7 +375,6 @@ ujiAsumsiServer <- function(id, values) {
       }
     )
     
-    # Handler Download Laporan
     output$download_report_assumption <- downloadHandler(
       filename = function() {
         paste("laporan_uji_asumsi_", input$test_type, "_", Sys.Date(), ".docx", sep = "")

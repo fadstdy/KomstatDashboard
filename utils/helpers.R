@@ -277,3 +277,136 @@ create_categorical_var <- function(data, var_name, breaks, labels) {
   
   return(data)
 }
+
+# Tambahkan fungsi ini ke dalam file utils/helpers.R
+
+# Fungsi untuk membuat tabel ringkasan statistik deskriptif
+create_summary_table <- function(data, var_name) {
+  if (!var_name %in% names(data)) {
+    return(data.frame(Error = paste("Variabel", var_name, "tidak ditemukan dalam data")))
+  }
+  
+  if (!is.numeric(data[[var_name]])) {
+    # Untuk variabel kategorikal, kembalikan tabel frekuensi
+    freq_table <- table(data[[var_name]], useNA = "ifany")
+    prop_table <- prop.table(freq_table) * 100
+    
+    result <- data.frame(
+      Kategori = names(freq_table),
+      Frekuensi = as.numeric(freq_table),
+      Persentase = round(as.numeric(prop_table), 2)
+    )
+    return(result)
+  }
+  
+  # Untuk variabel numerik, gunakan calculate_basic_stats
+  stats <- calculate_basic_stats(data, var_name)
+  
+  if (is.null(stats)) {
+    return(data.frame(Error = "Tidak dapat menghitung statistik untuk variabel ini"))
+  }
+  
+  # Format sebagai tabel yang rapi
+  result <- data.frame(
+    Statistik = c("Mean", "Median", "Std Dev", "Min", "Max", "Q1", "Q3", "IQR", 
+                  "Skewness", "Kurtosis", "N", "Missing"),
+    Nilai = c(
+      round(stats$Mean, 3),
+      round(stats$Median, 3),
+      round(stats$StdDev, 3),
+      round(stats$Min, 3),
+      round(stats$Max, 3),
+      round(stats$Q1, 3),
+      round(stats$Q3, 3),
+      round(stats$IQR, 3),
+      round(stats$Skewness, 3),
+      round(stats$Kurtosis, 3),
+      stats$N,
+      stats$Missing
+    )
+  )
+  
+  return(result)
+}
+
+# Fungsi untuk menginterpretasikan ringkasan regresi
+interpret_regression_summary <- function(summary_obj) {
+  if (is.null(summary_obj)) {
+    return("Tidak ada ringkasan model untuk diinterpretasi.")
+  }
+  
+  # Ekstrak informasi kunci
+  r_squared <- summary_obj$r.squared
+  adj_r_squared <- summary_obj$adj.r.squared
+  f_statistic <- summary_obj$fstatistic[1]
+  f_p_value <- pf(summary_obj$fstatistic[1], 
+                  summary_obj$fstatistic[2], 
+                  summary_obj$fstatistic[3], 
+                  lower.tail = FALSE)
+  
+  coefficients <- summary_obj$coefficients
+  
+  interpretation <- paste(
+    "INTERPRETASI HASIL REGRESI LINEAR BERGANDA:\n",
+    "==========================================\n\n",
+    "1. GOODNESS OF FIT:\n",
+    "- R-squared:", round(r_squared, 4), 
+    paste0("(", round(r_squared * 100, 2), "% variabilitas dijelaskan model)\n"),
+    "- Adjusted R-squared:", round(adj_r_squared, 4), "\n",
+    "- Interpretasi:", interpret_r_squared(r_squared), "\n\n",
+    
+    "2. UJI SIGNIFIKANSI MODEL KESELURUHAN (F-test):\n",
+    "- F-statistik:", round(f_statistic, 4), "\n",
+    "- p-value:", format_p_value(f_p_value), "\n",
+    "- Kesimpulan:", 
+    if (f_p_value < 0.05) {
+      "Model secara keseluruhan signifikan (p < 0.05)"
+    } else {
+      "Model secara keseluruhan tidak signifikan (p >= 0.05)"
+    }, "\n\n",
+    
+    "3. UJI SIGNIFIKANSI KOEFISIEN INDIVIDUAL:\n"
+  )
+  
+  # Interpretasi koefisien individual
+  for (i in 1:nrow(coefficients)) {
+    var_name <- rownames(coefficients)[i]
+    coef_value <- coefficients[i, "Estimate"]
+    p_value <- coefficients[i, "Pr(>|t|)"]
+    
+    interpretation <- paste(interpretation,
+                            "- ", var_name, ":\n",
+                            "  Koefisien:", round(coef_value, 4), "\n",
+                            "  p-value:", format_p_value(p_value), "\n",
+                            "  Signifikansi:", 
+                            if (p_value < 0.001) "*** (p < 0.001)" 
+                            else if (p_value < 0.01) "** (p < 0.01)"
+                            else if (p_value < 0.05) "* (p < 0.05)"
+                            else if (p_value < 0.1) ". (p < 0.1)"
+                            else "tidak signifikan", "\n",
+                            "  Interpretasi:", 
+                            if (var_name == "(Intercept)") {
+                              paste("Nilai prediksi ketika semua variabel independen = 0")
+                            } else {
+                              paste("Setiap peningkatan 1 unit", var_name, 
+                                    ifelse(coef_value > 0, "meningkatkan", "menurunkan"),
+                                    "variabel dependen sebesar", abs(round(coef_value, 4)), "unit")
+                            }, "\n\n"
+    )
+  }
+  
+  interpretation <- paste(interpretation,
+                          "4. REKOMENDASI:\n",
+                          if (r_squared < 0.3) {
+                            "- Model memiliki daya prediksi rendah. Pertimbangkan menambah variabel atau transformasi.\n"
+                          } else if (r_squared > 0.8) {
+                            "- Model memiliki daya prediksi tinggi. Periksa kemungkinan overfitting.\n"
+                          } else {
+                            "- Model memiliki daya prediksi yang wajar.\n"
+                          },
+                          "- Periksa asumsi regresi (normalitas residual, multikolinearitas, heteroskedastisitas).\n",
+                          "- Lakukan validasi model dengan data terpisah jika memungkinkan.\n"
+  )
+  
+  return(interpretation)
+}
