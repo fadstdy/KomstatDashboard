@@ -19,6 +19,10 @@ eksplorasiDataUI <- function(id) {
                          "Pilih Variabel Utama:",
                          choices = NULL),
              
+             selectInput(ns("select_variable2"), 
+                         "Pilih Variabel Kedua (untuk Scatter Plot):",
+                         choices = NULL),
+             
              selectInput(ns("group_variable_plot"), 
                          "Pilih Variabel Pengelompokan (Opsional):",
                          choices = NULL,
@@ -30,6 +34,12 @@ eksplorasiDataUI <- function(id) {
                           "Tampilkan Visualisasi", 
                           class = "btn-success"),
              br(), br(),
+             
+             # Tombol Reset Pilihan
+             actionButton(ns("reset_choices"), 
+                          "Reset Pilihan", 
+                          class = "btn-warning"), 
+             br(), br(), 
              
              # Opsi Download
              h5("Download Hasil:"),
@@ -49,81 +59,121 @@ eksplorasiDataUI <- function(id) {
     
     # Konten Utama
     column(8,
-           # Box Utama dengan Tab System
-           box(
-             title = "Hasil Eksplorasi Data",
-             status = "success",
-             solidHeader = TRUE,
-             width = 12,
-             collapsible = TRUE,
-             
-             # TAB SYSTEM UNTUK SEMUA KONTEN
-             tabsetPanel(
-               # Tab 1: Statistik Deskriptif (untuk numerik) atau Tabel Frekuensi (untuk kategorikal)
-               tabPanel("Statistik & Frekuensi",
-                        br(),
-                        conditionalPanel(
-                          condition = "output.show_numeric_stats == true",
-                          ns = ns,
-                          h4("Statistik Deskriptif"),
-                          withSpinner(tableOutput(ns("descriptive_stats")))
-                        ),
-                        conditionalPanel(
-                          condition = "output.show_categorical_stats == true", 
-                          ns = ns,
-                          h4("Tabel Frekuensi"),
-                          withSpinner(DT::dataTableOutput(ns("plot_frequency_table")))
-                        )
-               ),
-               
-               # Tab 2: Visualisasi Distribusi
-               tabPanel("Visualisasi Distribusi",
-                        br(),
-                        # Variabel numerik tanpa pengelompokan
-                        conditionalPanel(
-                          condition = "output.show_numeric_single == true",
-                          ns = ns,
-                          h4("Distribusi Variabel Numerik"),
-                          fluidRow(
-                            column(6, withSpinner(plotOutput(ns("plot_histogram_numeric"), height = "350px"))),
-                            column(6, withSpinner(plotOutput(ns("plot_boxplot_numeric"), height = "350px")))
-                          )
-                        ),
-                        
-                        # Variabel kategorikal
-                        conditionalPanel(
-                          condition = "output.show_categorical == true",
-                          ns = ns,
-                          h4("Distribusi Variabel Kategorikal"),
-                          withSpinner(plotOutput(ns("plot_barplot_categorical"), height = "400px"))
-                        )
-               ),
-               
-               # Tab 3: Perbandingan Kelompok (hanya muncul jika ada pengelompokan)
-               conditionalPanel(
-                 condition = "output.show_numeric_grouped == true",
-                 ns = ns,
-                 tabPanel("Perbandingan per Kelompok",
-                          br(),
-                          tabsetPanel(
-                            tabPanel("Boxplot Perbandingan",
-                                     br(),
-                                     withSpinner(plotOutput(ns("plot_boxplot_by_category"), height = "400px"))),
-                            tabPanel("Histogram per Kelompok", 
-                                     br(),
-                                     withSpinner(plotOutput(ns("plot_histogram_by_category"), height = "400px")))
-                          )
+           # Panel Info Awal (BARU)
+           conditionalPanel(
+             condition = "output.show_results == false", # Ditampilkan jika show_results FALSE
+             ns = ns,
+             box(
+               title = "Petunjuk Eksplorasi Data",
+               status = "info",
+               solidHeader = TRUE,
+               width = 12,
+               div(
+                 style = "padding: 20px; text-align: center;",
+                 p("Pilih variabel di panel kiri, lalu klik 'Tampilkan Visualisasi' untuk memulai analisis data."),
+                 hr(),
+                 h5("Output yang Tersedia:"),
+                 tags$ul(
+                   style = "text-align: left; display: inline-block;",
+                   tags$li("Statistik Deskriptif & Tabel Frekuensi"),
+                   tags$li("Visualisasi Distribusi (Histogram, Boxplot, Barplot)"),
+                   tags$li("Perbandingan antar Kelompok"),
+                   tags$li("Matriks Korelasi"),
+                   tags$li("Scatter Plot untuk hubungan dua variabel")
                  )
-               ),
+               )
+             )
+           ),
+           
+           # Box Utama dengan Tab System (Sekarang dikondisikan)
+           conditionalPanel(
+             condition = "output.show_results == true", # Hanya tampilkan jika show_results TRUE
+             ns = ns,
+             box(
+               title = "Hasil Eksplorasi Data",
+               status = "success",
+               solidHeader = TRUE,
+               width = 12,
+               collapsible = TRUE,
                
-               # Tab 4: Matriks Korelasi (hanya muncul jika ada >= 2 variabel numerik)
-               conditionalPanel(
-                 condition = "output.show_correlation == true",
-                 ns = ns,
-                 tabPanel("Matriks Korelasi",
+               # TAB SYSTEM UNTUK SEMUA KONTEN
+               tabsetPanel(
+                 # Tab 1: Statistik Deskriptif (untuk numerik) atau Tabel Frekuensi (untuk kategorikal)
+                 tabPanel("Statistik & Frekuensi",
                           br(),
-                          h4("Hubungan Antar Variabel Numerik"),
-                          withSpinner(plotOutput(ns("plot_correlation"), height = "500px"))
+                          conditionalPanel(
+                            condition = "output.show_numeric_stats == true",
+                            ns = ns,
+                            h4("Statistik Deskriptif"),
+                            withSpinner(tableOutput(ns("descriptive_stats")))
+                          ),
+                          conditionalPanel(
+                            condition = "output.show_categorical_stats == true", 
+                            ns = ns,
+                            h4("Tabel Frekuensi"),
+                            withSpinner(DT::dataTableOutput(ns("plot_frequency_table")))
+                          )
+                 ),
+                 
+                 # Tab 2: Visualisasi Distribusi
+                 tabPanel("Visualisasi Distribusi",
+                          br(),
+                          # Variabel numerik tanpa pengelompokan
+                          conditionalPanel(
+                            condition = "output.show_numeric_single == true",
+                            ns = ns,
+                            h4("Distribusi Variabel Numerik"),
+                            fluidRow(
+                              column(6, withSpinner(plotOutput(ns("plot_histogram_numeric"), height = "350px"))),
+                              column(6, withSpinner(plotOutput(ns("plot_boxplot_numeric"), height = "350px")))
+                            )
+                          ),
+                          
+                          # Variabel kategorikal
+                          conditionalPanel(
+                            condition = "output.show_categorical == true",
+                            ns = ns,
+                            h4("Distribusi Variabel Kategorikal"),
+                            withSpinner(plotOutput(ns("plot_barplot_categorical"), height = "400px"))
+                          )
+                 ),
+                 
+                 # Tab 3: Perbandingan Kelompok (hanya muncul jika ada pengelompokan)
+                 conditionalPanel(
+                   condition = "output.show_numeric_grouped == true",
+                   ns = ns,
+                   tabPanel("Perbandingan per Kelompok",
+                            br(),
+                            tabsetPanel(
+                              tabPanel("Boxplot Perbandingan",
+                                       br(),
+                                       withSpinner(plotOutput(ns("plot_boxplot_by_category"), height = "400px"))),
+                              tabPanel("Histogram per Kelompok", 
+                                       br(),
+                                       withSpinner(plotOutput(ns("plot_histogram_by_category"), height = "400px")))
+                            )
+                   )
+                 ),
+                 
+                 # Tab 4: Matriks Korelasi (hanya muncul jika ada >= 2 variabel numerik)
+                 conditionalPanel(
+                   condition = "output.show_correlation == true",
+                   ns = ns,
+                   tabPanel("Matriks Korelasi",
+                            br(),
+                            h4("Hubungan Antar Variabel Numerik"),
+                            withSpinner(plotOutput(ns("plot_correlation"), height = "500px"))
+                   )
+                 ),
+                 # Tab 5: Scatter Plot (BARU DITAMBAHKAN)
+                 conditionalPanel(
+                   condition = "output.show_scatter_plot == true", 
+                   ns = ns,
+                   tabPanel("Scatter Plot",
+                            br(),
+                            h4("Hubungan Antar Dua Variabel Numerik"),
+                            withSpinner(plotlyOutput(ns("plot_scatter"), height = "500px")) 
+                   )
                  )
                )
              )
@@ -166,70 +216,108 @@ eksplorasiDataServer <- function(id, values) {
       numeric_vars <- get_numeric_vars(values$current_data)
       categorical_vars <- get_categorical_vars(values$current_data)
       
-      updateSelectInput(session, "select_variable", 
-                        choices = setNames(all_vars, all_vars)) 
-      updateSelectInput(session, "group_variable_plot", 
-                        choices = setNames(c("", categorical_vars), c("", categorical_vars))) 
+      updateSelectInput(session, "select_variable",
+                        choices = setNames(all_vars, all_vars))
+      updateSelectInput(session, "select_variable2",
+                        choices = setNames(c("", numeric_vars), c("", numeric_vars)))
+      updateSelectInput(session, "group_variable_plot",
+                        choices = setNames(c("", categorical_vars), c("", categorical_vars)))
     })
     
     # Nilai Reaktif untuk Hasil Eksplorasi
     exploration_results <- reactiveValues(
       descriptive_stats = NULL,
-      hist_plot = NULL,            
-      boxplot_single_plot = NULL,  
-      barplot_plot = NULL,          
+      hist_plot = NULL,
+      boxplot_single_plot = NULL,
+      barplot_plot = NULL,
       plot_grouped_boxplot = NULL,
       plot_histogram_by_category = NULL,
       plot_frequency_table_data = NULL,
       plot_correlation_matrix = NULL,
+      scatter_plot = NULL,         
+      ggplot_scatter = NULL,       
       interpretation = NULL,
-      variable_type = NULL,  # Track variable type
-      has_grouping = FALSE   # Track if grouping is used
+      variable_type = NULL,
+      has_grouping = FALSE,
+      show_results = FALSE # BARU: Kontrol visibilitas hasil
     )
     
     # CONDITIONAL PANEL CONTROLS
     output$show_numeric_single <- reactive({
       !is.null(exploration_results$variable_type) && 
         exploration_results$variable_type == "numeric" && 
-        !exploration_results$has_grouping
+        !exploration_results$has_grouping && exploration_results$show_results # Tambahan
     })
     
     output$show_numeric_grouped <- reactive({
       !is.null(exploration_results$variable_type) && 
         exploration_results$variable_type == "numeric" && 
-        exploration_results$has_grouping
+        exploration_results$has_grouping && exploration_results$show_results # Tambahan
     })
     
     output$show_categorical <- reactive({
       !is.null(exploration_results$variable_type) && 
-        exploration_results$variable_type == "categorical"
+        exploration_results$variable_type == "categorical" && exploration_results$show_results # Tambahan
     })
     
-    # NEW: Show stats table for numeric variables
     output$show_numeric_stats <- reactive({
       !is.null(exploration_results$variable_type) && 
-        exploration_results$variable_type == "numeric"
+        exploration_results$variable_type == "numeric" && exploration_results$show_results # Tambahan
     })
     
-    # NEW: Show frequency table for categorical variables  
-    output$show_categorical_stats <- reactive({
+    output$show_categorical_stats <- reactive({ 
       !is.null(exploration_results$variable_type) && 
-        exploration_results$variable_type == "categorical"
+        exploration_results$variable_type == "categorical" && exploration_results$show_results # Tambahan
     })
     
-    # NEW: Show correlation matrix only if there are >= 2 numeric variables
     output$show_correlation <- reactive({
       numeric_vars <- get_numeric_vars(values$current_data)
-      length(numeric_vars) >= 2 && !is.null(exploration_results$plot_correlation_matrix)
+      length(numeric_vars) >= 2 && !is.null(exploration_results$plot_correlation_matrix) && exploration_results$show_results # Tambahan
     })
     
-    # Make these reactive outputs available to conditionalPanel
     outputOptions(output, "show_numeric_single", suspendWhenHidden = FALSE)
     outputOptions(output, "show_numeric_grouped", suspendWhenHidden = FALSE)
     outputOptions(output, "show_categorical", suspendWhenHidden = FALSE)
     outputOptions(output, "show_numeric_stats", suspendWhenHidden = FALSE)
     outputOptions(output, "show_categorical_stats", suspendWhenHidden = FALSE)
     outputOptions(output, "show_correlation", suspendWhenHidden = FALSE)
+    
+    # BARU: Kontrol visibilitas utama box hasil
+    output$show_results <- reactive({
+      exploration_results$show_results
+    })
+    outputOptions(output, "show_results", suspendWhenHidden = FALSE)
+    
+    output$show_scatter_plot <- reactive({
+      !is.null(input$select_variable) && input$select_variable != "" &&
+        !is.null(input$select_variable2) && input$select_variable2 != "" &&
+        input$select_variable != input$select_variable2 && 
+        (is.numeric(values$current_data[[input$select_variable]]) %||% FALSE) && 
+        (is.numeric(values$current_data[[input$select_variable2]]) %||% FALSE) &&
+        exploration_results$show_results # Tambahan
+    })
+    outputOptions(output, "show_scatter_plot", suspendWhenHidden = FALSE)
+    
+    # Observer untuk tombol "Reset Pilihan"
+    observeEvent(input$reset_choices, {
+      # Reset semua selectInput ke nilai awal (NULL atau "")
+      all_vars <- names(values$current_data)
+      numeric_vars <- get_numeric_vars(values$current_data)
+      categorical_vars <- get_categorical_vars(values$current_data)
+      
+      updateSelectInput(session, "select_variable", 
+                        choices = setNames(all_vars, all_vars), selected = NULL)
+      updateSelectInput(session, "select_variable2", 
+                        choices = setNames(c("", numeric_vars), c("", numeric_vars)), selected = NULL)
+      updateSelectInput(session, "group_variable_plot", 
+                        choices = setNames(c("", categorical_vars), c("", categorical_vars)), selected = NULL)
+      
+      # Reset semua hasil eksplorasi menggunakan fungsi helper
+      clear_reactive_values(exploration_results)
+      exploration_results$show_results <- FALSE # BARU: Sembunyikan hasil
+      
+      showNotification("Pilihan dan hasil eksplorasi telah direset!", type = "message")
+    })
     
     # Hasilkan plot dan statistik saat tombol diklik
     observeEvent(input$generate_plots, {
@@ -239,14 +327,9 @@ eksplorasiDataServer <- function(id, values) {
       var_name <- input$select_variable
       has_grouping <- !is.null(input$group_variable_plot) && input$group_variable_plot != ""
       
-      # Reset semua nilai reaktif plot
-      exploration_results$hist_plot <- NULL
-      exploration_results$boxplot_single_plot <- NULL
-      exploration_results$barplot_plot <- NULL
-      exploration_results$plot_grouped_boxplot <- NULL
-      exploration_results$plot_histogram_by_category <- NULL
-      exploration_results$plot_frequency_table_data <- NULL
-      exploration_results$plot_correlation_matrix <- NULL
+      # Reset semua nilai reaktif plot, termasuk scatter plot
+      clear_reactive_values(exploration_results) # BARU: Gunakan helper untuk reset semua
+      exploration_results$show_results <- TRUE # BARU: Tampilkan hasil setelah generate
       
       # Determine variable type and grouping
       exploration_results$variable_type <- if(is.numeric(data[[var_name]])) "numeric" else "categorical"
@@ -307,7 +390,30 @@ eksplorasiDataServer <- function(id, values) {
         exploration_results$plot_frequency_table_data <- freq_table
       }
       
-      # --- Matriks Korelasi (selalu ada) ---
+      # --- Scatter Plot ---
+      if (!is.null(input$select_variable2) && input$select_variable2 != "" &&
+          input$select_variable != input$select_variable2 &&
+          is.numeric(data[[input$select_variable]]) &&
+          is.numeric(data[[input$select_variable2]])) {
+        
+        x_var <- input$select_variable
+        y_var <- input$select_variable2
+        
+        p_scatter <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]],
+                                      text = paste0("<b>", x_var, ":</b> ", round(.data[[x_var]], 2), "<br>",
+                                                    "<b>", y_var, ":</b> ", round(.data[[y_var]], 2), "<br>",
+                                                    "<b>Wilayah:</b> ", data$CITY_NAME))) + 
+          geom_point(alpha = 0.6, color = "steelblue") +
+          geom_smooth(method = "lm", se = FALSE, color = "red", linetype = "dashed") + 
+          labs(title = paste("Scatter Plot:", x_var, "vs", y_var),
+               x = x_var, y = y_var) +
+          theme_custom()
+        
+        exploration_results$ggplot_scatter <- p_scatter 
+        exploration_results$scatter_plot <- ggplotly(p_scatter, tooltip = "text") 
+      }
+      
+      # --- Matriks Korelasi ---
       numeric_only_data <- data %>% select(where(is.numeric)) %>% na.omit()
       if (ncol(numeric_only_data) >= 2) {
         cor_matrix <- cor(numeric_only_data)
@@ -373,6 +479,15 @@ eksplorasiDataServer <- function(id, values) {
                                       "- Gunakan untuk mengidentifikasi variabel yang saling terkait\n\n")
       }
       
+      if (!is.null(exploration_results$scatter_plot)) {
+        interpretation_text <- paste0(interpretation_text,
+                                      "SCATTER PLOT:\n",
+                                      "- Menunjukkan hubungan antara ", input$select_variable, " dan ", input$select_variable2, ".\n",
+                                      "- Amati arah (positif/negatif) dan kekuatan (rapat/menyebar) sebaran titik-titik data.\n",
+                                      "- Garis putus-putus merah menunjukkan tren linear (garis regresi) antara kedua variabel.\n",
+                                      "- Pola titik yang mengumpul di sekitar garis menunjukkan hubungan yang kuat, sementara sebaran acak menunjukkan hubungan yang lemah atau tidak ada hubungan linear.\n\n")
+      }
+      
       exploration_results$interpretation <- interpretation_text
     })
     
@@ -382,7 +497,6 @@ eksplorasiDataServer <- function(id, values) {
       exploration_results$descriptive_stats
     })
     
-    # Output renderPlot individual untuk plot distribusi
     output$plot_histogram_numeric <- renderPlot({
       req(exploration_results$hist_plot)
       exploration_results$hist_plot
@@ -403,7 +517,6 @@ eksplorasiDataServer <- function(id, values) {
       exploration_results$plot_grouped_boxplot
     })
     
-    # NEW: Histogram per kategori
     output$plot_histogram_by_category <- renderPlot({
       req(exploration_results$plot_histogram_by_category)
       exploration_results$plot_histogram_by_category
@@ -450,7 +563,11 @@ eksplorasiDataServer <- function(id, values) {
       exploration_results$interpretation
     })
     
-    # Handler Download - Updated
+    output$plot_scatter <- renderPlotly({
+      req(exploration_results$scatter_plot)
+      exploration_results$scatter_plot
+    })
+    
     output$download_descriptive_stats <- downloadHandler(
       filename = function() { paste("statistik_deskriptif_", Sys.Date(), ".csv", sep="") },
       content = function(file) {
@@ -459,22 +576,25 @@ eksplorasiDataServer <- function(id, values) {
     )
     
     output$download_main_plot <- downloadHandler(
-      filename = function() { 
+      filename = function() {
         plot_type <- if(!is.null(exploration_results$hist_plot)) "histogram" else
           if(!is.null(exploration_results$boxplot_single_plot)) "boxplot" else
             if(!is.null(exploration_results$barplot_plot)) "barplot" else
-              if(!is.null(exploration_results$plot_grouped_boxplot)) "boxplot_grouped" else "plot"
+              if(!is.null(exploration_results$plot_grouped_boxplot)) "boxplot_grouped" else
+                if(!is.null(exploration_results$ggplot_scatter)) "scatter" else "plot" 
         paste(plot_type, "_", input$select_variable, "_", Sys.Date(), ".png", sep="")
       },
       content = function(file) {
-        # Choose the most appropriate plot to download
-        main_plot <- exploration_results$hist_plot %||% 
+        main_plot <- exploration_results$hist_plot %||%
           exploration_results$boxplot_single_plot %||%
           exploration_results$barplot_plot %||%
-          exploration_results$plot_grouped_boxplot
+          exploration_results$plot_grouped_boxplot %||%
+          exploration_results$ggplot_scatter
         
         if (!is.null(main_plot)) {
           ggsave(file, main_plot, width = 12, height = 8, dpi = 300)
+        } else {
+          showNotification("Tidak ada plot utama yang tersedia untuk diunduh.", type = "warning")
         }
       }
     )
@@ -486,6 +606,7 @@ eksplorasiDataServer <- function(id, values) {
         doc <- doc %>%
           officer::body_add_par("Laporan Eksplorasi Data", style = "heading 1") %>%
           officer::body_add_par(paste("Variabel Utama:", input$select_variable)) %>%
+          officer::body_add_par(paste("Variabel Kedua (Scatter):", ifelse(!is.null(input$select_variable2) && input$select_variable2 != "", input$select_variable2, "Tidak ada"))) %>% 
           officer::body_add_par(paste("Pengelompokan:", ifelse(exploration_results$has_grouping, input$group_variable_plot, "Tidak ada"))) %>%
           officer::body_add_par(paste("Tanggal:", Sys.Date())) %>%
           officer::body_add_par(" ") %>%
@@ -495,28 +616,28 @@ eksplorasiDataServer <- function(id, values) {
           doc <- doc %>% officer::body_add_table(exploration_results$descriptive_stats, style = "Table Grid")
         }
         
-        # Add all relevant plots
         all_plots <- list(
           list(plot = exploration_results$hist_plot, title = "Histogram"),
           list(plot = exploration_results$boxplot_single_plot, title = "Boxplot Tunggal"),
           list(plot = exploration_results$barplot_plot, title = "Barplot"),
           list(plot = exploration_results$plot_grouped_boxplot, title = "Boxplot per Kategori"),
           list(plot = exploration_results$plot_histogram_by_category, title = "Histogram per Kategori"),
-          list(plot = exploration_results$plot_correlation_matrix, title = "Matriks Korelasi")
+          list(plot = exploration_results$plot_correlation_matrix, title = "Matriks Korelasi"),
+          list(plot = exploration_results$ggplot_scatter, title = "Scatter Plot") 
         )
         
         for (plot_info in all_plots) {
           if (!is.null(plot_info$plot)) {
             temp_plot_file <- tempfile(fileext = ".png")
             ggsave(temp_plot_file, plot_info$plot, width = 10, height = 6, dpi = 300)
-            doc <- doc %>% 
+            doc <- doc %>%
               officer::body_add_par(plot_info$title, style = "heading 3") %>%
               officer::body_add_img(temp_plot_file, width = 8, height = 5)
             unlink(temp_plot_file)
           }
         }
         
-        doc <- doc %>% 
+        doc <- doc %>%
           officer::body_add_par("Interpretasi:", style = "heading 2") %>%
           officer::body_add_par(exploration_results$interpretation)
         

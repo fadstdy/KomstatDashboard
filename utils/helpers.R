@@ -475,3 +475,10 @@ create_top_n_line_chart <- function(data, value_col, name_col, title = "Top 5 Da
     scale_x_continuous(breaks = 1:nrow(data), labels = data[[name_col]])
 }
 
+
+# BARU: Fungsi generik untuk mengosongkan semua elemen di reactiveValues
+clear_reactive_values <- function(reactive_values_obj) {
+  for (name in names(reactive_values_obj)) {
+    reactive_values_obj[[name]] <- NULL
+  }
+}
