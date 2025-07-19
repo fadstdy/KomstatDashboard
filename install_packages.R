@@ -25,12 +25,12 @@ packages_to_install <- c(
   "data.table", # Untuk fread (baca data cepat)
   "moments",   # Untuk skewness dan kurtosis
   "classInt",  # Untuk Jenks Natural Breaks
-  "shinycssloaders" # Untuk withSpinner function
+  "shinycssloaders", # Untuk withSpinner function
+  "sf",        # Untuk membaca dan memproses file GeoJSON
+  "RColorBrewer" # Untuk palet warna peta (opsional, sudah termasuk dalam ggplot2)
 )
 
 # Install and load all packages
 for (package in packages_to_install) {
   install_if_missing(package)
 }
-
-# Pastikan fungsi-fungsi spesifik tersedia jika mereka bagian dari paket yang lebih besar.

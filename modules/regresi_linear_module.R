@@ -12,7 +12,7 @@ regresiLinearUI <- function(id) {
              title = "Panel Kontrol Regresi Linear",
              status = "primary",
              solidHeader = TRUE,
-             width = 12,
+             width = 18,
              
              # Pemilihan Variabel
              selectInput(ns("dependent_variable"), 
@@ -23,20 +23,17 @@ regresiLinearUI <- function(id) {
                          "Variabel Independen (X):",
                          choices = NULL,
                          multiple = TRUE),
-             helpText("Pilih minimal 1 variabel independen. Untuk model yang baik, disarankan 2-5 variabel."),
              
              # Opsi Model
              hr(),
              h5("Opsi Model:"),
              checkboxInput(ns("include_interactions"), 
-                           "Sertakan Interaksi Antar Variabel", 
+                           "Interaksi Antar Variabel \n(jika ≥2 variabel)", 
                            value = FALSE),
-             helpText("Menambahkan efek interaksi untuk variabel independen (hanya jika ≥2 variabel)"),
              
              checkboxInput(ns("standardize"), 
-                           "Standardisasi Variabel Independen", 
+                           "Standardisasi Variabel Independen \n(untuk interpretasi koefisien)", 
                            value = FALSE),
-             helpText("Mengubah variabel ke skala yang sama (z-score) untuk interpretasi koefisien"),
              
              # Tingkat Kepercayaan
              numericInput(ns("conf_level"), 
@@ -75,16 +72,15 @@ regresiLinearUI <- function(id) {
              condition = "output.show_initial_info == true",
              ns = ns,
              box(
-               title = "Petunjuk Analisis Regresi Linear Berganda",
+               title = "Petunjuk Analisis Regresi Linear",
                status = "info",
                solidHeader = TRUE,
                width = 12,
                div(
                  style = "padding: 20px; text-align: center;",
-                 h4("Siap untuk Analisis Regresi Linear"),
-                 p("Pilih variabel dependen dan independen di panel kiri, lalu klik tombol 'Jalankan Analisis Regresi' untuk memulai."),
+                 p("Pilih variabel dependen dan independen di panel kiri, \nlalu klik tombol 'Jalankan Analisis Regresi' untuk memulai."),
                  hr(),
-                 h5("Yang akan dihasilkan:"),
+                 h5("Output:"),
                  tags$ul(
                    style = "text-align: left; display: inline-block;",
                    tags$li("Ringkasan model dengan R-squared dan F-statistik"),

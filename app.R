@@ -18,6 +18,9 @@ library(data.table) # Untuk fread
 library(moments)   # Untuk skewness dan kurtosis
 library(classInt)  # Untuk Jenks Natural Breaks
 library(shinycssloaders) # Untuk withSpinner function
+library(RColorBrewer)
+library(htmlwidgets)
+library(viridis)
 
 # Sumber fungsi utilitas
 source("utils/helpers.R") 
@@ -26,6 +29,7 @@ source("utils/helpers.R")
 source("modules/beranda_module.R")
 source("modules/manajemen_data_module.R")
 source("modules/eksplorasi_data_module.R")
+source("modules/peta_module.R")
 source("modules/uji_asumsi_module.R")
 source("modules/statistik_inferensia_module.R")
 source("modules/regresi_linear_module.R")
@@ -63,6 +67,7 @@ ui <- dashboardPage(
       menuItem("Beranda", tabName = "beranda", icon = icon("home")),
       menuItem("Manajemen Data", tabName = "manajemen_data", icon = icon("cogs")),
       menuItem("Eksplorasi Data", tabName = "eksplorasi_data", icon = icon("chart-bar")),
+      menuItem("Peta Tematik", tabName = "peta", icon = icon("map")),
       menuItem("Uji Asumsi", tabName = "uji_asumsi", icon = icon("check-circle")),
       menuItem("Statistik Inferensia", tabName = "statistik_inferensia", icon = icon("flask")),
       menuItem("Regresi Linear", tabName = "regresi_linear", icon = icon("chart-line"))
@@ -82,6 +87,8 @@ ui <- dashboardPage(
               manajemenDataUI("manajemen_data_tab")),
       tabItem(tabName = "eksplorasi_data",
               eksplorasiDataUI("eksplorasi_data_tab")),
+      tabItem(tabName = "peta",
+              petaUI("peta_tab")),
       tabItem(tabName = "uji_asumsi",
               ujiAsumsiUI("uji_asumsi_tab")),
       tabItem(tabName = "statistik_inferensia",
@@ -102,6 +109,7 @@ server <- function(input, output, session) {
   berandaServer("beranda_tab", values)
   manajemenDataServer("manajemen_data_tab", values) 
   eksplorasiDataServer("eksplorasi_data_tab", values)
+  petaServer("peta_tab", values)
   ujiAsumsiServer("uji_asumsi_tab", values)
   statistikInferensiaServer("statistik_inferensia_tab", values)
   regresiLinearServer("regresi_linear_tab", values)
