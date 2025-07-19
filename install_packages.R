@@ -27,7 +27,8 @@ packages_to_install <- c(
   "classInt",  # Untuk Jenks Natural Breaks
   "shinycssloaders", # Untuk withSpinner function
   "sf",        # Untuk membaca dan memproses file GeoJSON
-  "RColorBrewer" # Untuk palet warna peta (opsional, sudah termasuk dalam ggplot2)
+  "RColorBrewer", # Untuk palet warna peta (opsional, sudah termasuk dalam ggplot2)
+  "treemap"
 )
 
 # Install and load all packages

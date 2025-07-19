@@ -35,7 +35,7 @@ source("modules/statistik_inferensia_module.R")
 source("modules/regresi_linear_module.R")
 
 # --- Pemuatan Data ---
-data_path <- "data/data_sovi.csv" 
+data_path <- "data/data_soviedit.csv" 
 
 # Periksa apakah file ada, jika tidak, berikan peringatan atau hentikan aplikasi
 if (!file.exists(data_path)) {

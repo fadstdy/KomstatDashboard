@@ -1,6 +1,13 @@
 # Helper Functions
 # utils/helpers.R
 
+# Pastikan ini dimuat di global.R atau app.R
+# library(ggplot2)
+# library(dplyr)
+# library(plotly)
+# library(officer)
+# library(moments) # Tambahkan ini jika Anda belum memuatnya secara eksplisit
+
 # Fungsi untuk menampilkan notifikasi
 show_notification <- function(message, type = "default") {
   # Tipe valid untuk showNotification: "default", "message", "warning", "error"
@@ -162,29 +169,30 @@ interpret_anova <- function(p_value, alpha = 0.05) {
   }
 }
 
-# Fungsi untuk menginterpretasikan R-squared
-interpret_r_squared <- function(r_squared) {
-  if (r_squared >= 0.8) {
-    return(paste0("Model sangat baik (R² = ", round(r_squared, 4), ")"))
-  } else if (r_squared >= 0.6) {
-    return(paste0("Model baik (R² = ", round(r_squared, 4), ")"))
-  } else if (r_squared >= 0.4) {
-    return(paste0("Model sedang (R² = ", round(r_squared, 4), ")"))
-  } else if (r_squared >= 0.2) {
-    return(paste0("Model lemah (R² = ", round(r_squared, 4), ")"))
-  } else {
-    return(paste0("Model sangat lemah (R² = ", round(r_squared, 4), ")"))
-  }
-}
-
 # Fungsi untuk memformat p-value
 format_p_value <- function(p_value) {
   if (p_value < 0.001) {
     return("< 0.001")
   } else {
-    return(sprintf("%.3f", p_value))
+    return(round(p_value, 4)) # Menggunakan round untuk konsistensi
   }
 }
+
+# Fungsi untuk menginterpretasikan R-squared (PERTANYAKAN VERSI INI)
+interpret_r_squared <- function(r_squared) {
+  if (r_squared < 0.3) {
+    return("Lemah - Model menjelaskan variabilitas rendah")
+  } else if (r_squared < 0.5) {
+    return("Sedang - Model memiliki daya prediksi cukup")
+  } else if (r_squared < 0.7) {
+    return("Baik - Model memiliki daya prediksi yang baik")
+  } else if (r_squared < 0.9) {
+    return("Sangat Baik - Model memiliki daya prediksi tinggi")
+  } else {
+    return("Sangat Tinggi - Periksa kemungkinan overfitting")
+  }
+}
+
 
 # Fungsi untuk membuat tema kustom untuk plot
 theme_custom <- function() {
@@ -198,7 +206,6 @@ theme_custom <- function() {
       legend.text = element_text(size = 10),
       strip.text = element_text(size = 11, face = "bold"),
       panel.grid.minor = element_blank(),
-      # Perbaikan: Ganti 'size' dengan 'linewidth'
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5) 
     )
 }
@@ -277,8 +284,6 @@ create_categorical_var <- function(data, var_name, breaks, labels) {
   
   return(data)
 }
-
-# Tambahkan fungsi ini ke dalam file utils/helpers.R
 
 # Fungsi untuk membuat tabel ringkasan statistik deskriptif
 create_summary_table <- function(data, var_name) {
@@ -411,26 +416,62 @@ interpret_regression_summary <- function(summary_obj) {
   return(interpretation)
 }
 
-# Helper function untuk interpretasi R-squared
-interpret_r_squared <- function(r_squared) {
-  if (r_squared < 0.3) {
-    return("Lemah - Model menjelaskan variabilitas rendah")
-  } else if (r_squared < 0.5) {
-    return("Sedang - Model memiliki daya prediksi cukup")
-  } else if (r_squared < 0.7) {
-    return("Baik - Model memiliki daya prediksi yang baik")
-  } else if (r_squared < 0.9) {
-    return("Sangat Baik - Model memiliki daya prediksi tinggi")
-  } else {
-    return("Sangat Tinggi - Periksa kemungkinan overfitting")
+# Fungsi generik untuk membuat grafik batang horizontal top N
+create_top_n_bar_plot <- function(data, value_col, name_col, title = "Top 5 Daerah", x_label = "Nilai", y_label = "Kabupaten/Kota", fill_low = "lightblue", fill_high = "darkblue", plot_title_size = 10) {
+  
+  if (is.null(data) || nrow(data) == 0 || !(value_col %in% names(data)) || !(name_col %in% names(data))) {
+    # Mengembalikan plot kosong dengan pesan
+    return(ggplot() + 
+             labs(title = paste0("Data untuk ", title, " tidak tersedia.")) +
+             theme_void() +
+             theme(plot.title = element_text(hjust = 0.5, size = plot_title_size, color = "gray50")))
   }
+  
+  # Mengurutkan berdasarkan nilai dan mengubah menjadi faktor
+  data[[name_col]] <- factor(data[[name_col]],
+                             levels = data[[name_col]][order(data[[value_col]])])
+  
+  ggplot(data, aes(x = .data[[value_col]], y = .data[[name_col]], fill = .data[[value_col]],
+                   text = paste0("Kabupaten/Kota: ", .data[[name_col]], "<br>",
+                                 x_label, ": ", round(.data[[value_col]], 2)))) + # Custom tooltip text, round value
+    geom_bar(stat = "identity") +
+    labs(title = title,
+         x = x_label,
+         y = y_label) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = plot_title_size)) + # Judul di tengah, ukuran judul disesuaikan
+    scale_fill_gradient(low = fill_low, high = fill_high)
 }
 
-# Helper function untuk format p-value
-format_p_value <- function(p_value) {
-  if (p_value < 0.001) {
-    return("< 0.001")
-  } else {
-    return(round(p_value, 4))
+# Fungsi spesifik untuk membuat line chart (misalnya untuk populasi atau buta huruf)
+create_top_n_line_chart <- function(data, value_col, name_col, title = "Top 5 Daerah", x_label = "Peringkat", y_label = "Nilai", plot_title_size = 10) {
+  
+  if (is.null(data) || nrow(data) == 0 || !(value_col %in% names(data)) || !(name_col %in% names(data))) {
+    # Mengembalikan plot kosong dengan pesan
+    return(ggplot() + 
+             labs(title = paste0("Data untuk ", title, " tidak tersedia.")) +
+             theme_void() +
+             theme(plot.title = element_text(hjust = 0.5, size = plot_title_size, color = "gray50")))
   }
+  
+  # Mengurutkan data dan menambahkan kolom peringkat
+  data <- data %>%
+    arrange(desc(.data[[value_col]])) %>%
+    mutate(rank = 1:n()) # Membuat peringkat untuk sumbu X jika tidak ada variabel waktu
+  
+  ggplot(data, aes(x = rank, y = .data[[value_col]], group = 1, 
+                   text = paste0("Kabupaten/Kota: ", .data[[name_col]], "<br>",
+                                 y_label, ": ", round(.data[[value_col]], 2)))) +
+    geom_line(size = 1, color = "steelblue") +
+    geom_point(size = 3, color = "steelblue") +
+    labs(title = title,
+         x = x_label,
+         y = y_label) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = plot_title_size),
+          axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_x_continuous(breaks = 1:nrow(data), labels = data[[name_col]])
 }
+
