@@ -1,7 +1,7 @@
 # Helper Functions
 # utils/helpers.R
 
-# Fungsi untuk menampilkan notifikasi aman
+# Fungsi untuk menampilkan notifikasi
 show_notification <- function(message, type = "default") {
   # Tipe valid untuk showNotification: "default", "message", "warning", "error"
   valid_types <- c("default", "message", "warning", "error")
@@ -203,18 +203,18 @@ theme_custom <- function() {
     )
 }
 
-# Fungsi untuk mendapatkan variabel numerik (Dipindahkan dari data_processing.R)
+# Fungsi untuk mendapatkan variabel numerik 
 get_numeric_vars <- function(data) {
   names(data)[sapply(data, is.numeric)]
 }
 
-# Fungsi untuk mendapatkan variabel kategorikal (Dipindahkan dari data_processing.R)
+# Fungsi untuk mendapatkan variabel kategorikal
 get_categorical_vars <- function(data) {
   categorical_cols <- names(data)[sapply(data, function(x) is.factor(x) || is.character(x))]
   return(categorical_cols)
 }
 
-# Fungsi untuk menghitung statistik deskriptif dasar (Dipindahkan dari data_processing.R)
+# Fungsi untuk menghitung statistik deskriptif dasar 
 calculate_basic_stats <- function(data, var_name) {
   if (!is.numeric(data[[var_name]])) {
     showNotification(paste0("Variabel '", var_name, "' bukan numerik. Statistik deskriptif tidak dapat dihitung."), type = "warning")
@@ -409,4 +409,28 @@ interpret_regression_summary <- function(summary_obj) {
   )
   
   return(interpretation)
+}
+
+# Helper function untuk interpretasi R-squared
+interpret_r_squared <- function(r_squared) {
+  if (r_squared < 0.3) {
+    return("Lemah - Model menjelaskan variabilitas rendah")
+  } else if (r_squared < 0.5) {
+    return("Sedang - Model memiliki daya prediksi cukup")
+  } else if (r_squared < 0.7) {
+    return("Baik - Model memiliki daya prediksi yang baik")
+  } else if (r_squared < 0.9) {
+    return("Sangat Baik - Model memiliki daya prediksi tinggi")
+  } else {
+    return("Sangat Tinggi - Periksa kemungkinan overfitting")
+  }
+}
+
+# Helper function untuk format p-value
+format_p_value <- function(p_value) {
+  if (p_value < 0.001) {
+    return("< 0.001")
+  } else {
+    return(round(p_value, 4))
+  }
 }

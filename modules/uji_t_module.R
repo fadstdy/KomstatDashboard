@@ -38,17 +38,15 @@ ujiTUI <- function(id) {
                helpText("Nilai yang akan dibandingkan dengan rata-rata sampel")
              ),
              
-             # Input untuk two sample
+             # Input untuk two sample (checkbox equal_var dihapus)
              conditionalPanel(
                condition = "input.test_type == 'two_sample'",
                ns = ns,
                selectInput(ns("group_variable"), 
                            "Variabel Pengelompokan:",
                            choices = NULL),
-               checkboxInput(ns("equal_var"), 
-                             "Asumsi Variansi Sama", 
-                             value = TRUE),
-               helpText("✓ Centang untuk Student's t-test\n✗ Hilangkan untuk Welch's t-test")
+               # checkboxInput untuk equal_var dihapus di sini
+               helpText("Asumsi: Variansi antar kelompok adalah sama (Student's t-test)")
              ),
              
              selectInput(ns("alternative"), 
@@ -129,13 +127,16 @@ ujiTServer <- function(id, values) {
           if (!var %in% names(values$current_data)) return(FALSE)
           
           groups <- unique(na.omit(values$current_data[[var]]))
+          
+          # Baris ini memastikan variabel memiliki TEPAT 2 kelompok.
           if (length(groups) != 2) return(FALSE)
           
           # Cek ukuran masing-masing kelompok
           group_sizes <- table(values$current_data[[var]])
           min_size <- min(group_sizes)
           
-          return(min_size >= 3) # minimal 3 observasi per kelompok
+          # Baris ini memastikan SETIAP kelompok memiliki minimal 3 observasi.
+          return(min_size >= 3)
         })
       ]
       
@@ -272,10 +273,10 @@ ujiTServer <- function(id, values) {
           return()
         }
         
-        # Two sample t-test
+        # Two sample t-test (selalu dengan var.equal = TRUE)
         formula_str <- paste(input$variable, "~", input$group_variable)
         test_result <- t.test(as.formula(formula_str), data = complete_data,
-                              var.equal = input$equal_var,
+                              var.equal = TRUE, # Variansi selalu diasumsikan sama
                               alternative = input$alternative,
                               conf.level = 1 - input$alpha)
         test_results$results <- test_result
@@ -305,8 +306,8 @@ ujiTServer <- function(id, values) {
         group_sizes <- table(complete_data[[input$group_variable]])
         
         test_results$interpretation <- paste(
-          "INTERPRETASI UJI t DUA SAMPEL:\n",
-          "==============================\n\n",
+          "INTERPRETASI UJI t DUA SAMPEL (STUDENT'S T-TEST):\n", # Judul interpretasi diubah
+          "===============================================\n\n",
           "KELOMPOK YANG DIBANDINGKAN:\n",
           "- Kelompok 1:", group_names[1], "\n",
           "  * Ukuran sampel (n₁) =", group_sizes[1], "\n",
@@ -316,7 +317,7 @@ ujiTServer <- function(id, values) {
           "  * Rata-rata (μ₂) =", round(group_means[2], 4), "\n",
           "- Perbedaan rata-rata (μ₁ - μ₂) =", round(group_diff, 4), "\n\n",
           "ASUMSI UJI:\n",
-          "- Variansi sama:", ifelse(input$equal_var, "YA (Student's t-test)", "TIDAK (Welch's t-test)"), "\n\n",
+          "- Variansi diasumsikan sama (Student's t-test).\n\n", # Baris asumsi diubah
           "HIPOTESIS:\n",
           "- H₀: μ₁ = μ₂ (tidak ada perbedaan rata-rata)\n",
           "- H₁: μ₁", switch(input$alternative, 

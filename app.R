@@ -10,8 +10,8 @@ library(plotly)
 library(ggplot2)
 library(dplyr)
 library(officer)
-library(car)       # Untuk VIF dan ncvTest
-library(lmtest)    # Untuk bptest (Breusch-Pagan test)
+library(car)       # Untuk VIF
+library(lmtest)    # Untuk Breusch-Pagan test
 library(gridExtra) # Untuk menggabungkan plot
 library(readr)     # Untuk read_csv
 library(data.table) # Untuk fread
@@ -30,11 +30,8 @@ source("modules/uji_asumsi_module.R")
 source("modules/statistik_inferensia_module.R")
 source("modules/regresi_linear_module.R")
 
-# --- Pemuatan Data Langsung dari file gabungan ---
-# Asumsi data_sovi.csv sudah berisi semua kolom yang dibutuhkan (termasuk CITY_NAME, PROVINCE_NAME)
-# Asumsi data_sovi.csv berada di direktori utama proyek, atau di folder data/
-data_path <- "data/data_sovi.csv" # <--- Sesuaikan PATH ini jika file Anda di tempat lain
-# Contoh jika di folder 'data': data_path <- "data/data_sovi.csv"
+# --- Pemuatan Data ---
+data_path <- "data/data_sovi.csv" 
 
 # Periksa apakah file ada, jika tidak, berikan peringatan atau hentikan aplikasi
 if (!file.exists(data_path)) {
@@ -43,7 +40,7 @@ if (!file.exists(data_path)) {
 
 global_combined_data <- readr::read_csv(data_path, show_col_types = FALSE)
 
-# Opsional: Jika DISTRICTCODE, PROVINCE_NAME, CITY_NAME perlu dikonversi ke faktor, lakukan di sini
+# Opsional: Jika DISTRICTCODE, PROVINCE_NAME, CITY_NAME perlu dikonversi ke faktor
 if ("DISTRICTCODE" %in% names(global_combined_data)) {
   global_combined_data$DISTRICTCODE <- as.character(global_combined_data$DISTRICTCODE)
 }
@@ -54,7 +51,7 @@ if ("CITY_NAME" %in% names(global_combined_data)) {
   global_combined_data$CITY_NAME <- as.factor(global_combined_data$CITY_NAME)
 }
 
-# --- AKHIR Pemuatan Data Langsung ---
+# --- AKHIR Pemuatan Data ---
 
 
 # Definisi UI
