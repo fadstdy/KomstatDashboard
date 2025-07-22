@@ -1,4 +1,4 @@
-# Uji Proporsi Module - LOGIKA DIPERBAIKI
+# Uji Proporsi Module 
 # modules/uji_proporsi_module.R
 
 # UI function for Uji Proporsi
@@ -15,7 +15,7 @@ ujiProporsiUI <- function(id) {
              width = 12,
              
              # Pilih Jenis Uji
-             selectInput(ns("test_type"), 
+             selectInput(ns("test_type"),
                          "Jenis Uji:",
                          choices = list(
                            "Proporsi Unit Administratif" = "administrative",
@@ -23,7 +23,7 @@ ujiProporsiUI <- function(id) {
                            "Perbandingan Dua Proporsi" = "two_proportion"
                          )),
              
-             # ========== UJI PROPORSI ADMINISTRATIF ==========
+             # UJI PROPORSI ADMINISTRATIF
              conditionalPanel(
                condition = "input.test_type == 'administrative'",
                ns = ns,
@@ -31,7 +31,7 @@ ujiProporsiUI <- function(id) {
                p("Menguji proporsi kabupaten/provinsi yang memenuhi kriteria tertentu"),
                
                # Pilih Variabel Numerik
-               selectInput(ns("admin_variable"), 
+               selectInput(ns("admin_variable"),
                            "Variabel Numerik:",
                            choices = NULL),
                
@@ -46,7 +46,7 @@ ujiProporsiUI <- function(id) {
                ),
                
                # Level Analisis
-               selectInput(ns("admin_level"), 
+               selectInput(ns("admin_level"),
                            "Level Analisis:",
                            choices = list(
                              "Kabupaten/Kota" = "city",
@@ -54,19 +54,19 @@ ujiProporsiUI <- function(id) {
                            )),
                
                # Threshold
-               numericInput(ns("admin_threshold"), 
+               numericInput(ns("admin_threshold"),
                             "Nilai Threshold:",
                             value = 70),
                
                p("Contoh: Berapa proporsi kabupaten dengan tingkat kemiskinan > 30?"),
                
                # Proporsi Hipotesis
-               numericInput(ns("admin_p0"), 
+               numericInput(ns("admin_p0"),
                             "Proporsi Hipotesis (p₀):",
                             value = 0.5, min = 0, max = 1, step = 0.01),
                
                # Hipotesis Alternatif
-               selectInput(ns("admin_alternative"), 
+               selectInput(ns("admin_alternative"),
                            "Hipotesis Alternatif:",
                            choices = list(
                              "Dua arah (≠)" = "two.sided",
@@ -75,7 +75,7 @@ ujiProporsiUI <- function(id) {
                            ))
              ),
              
-             # ========== UJI PROPORSI KATEGORI ==========
+             # UJI PROPORSI KATEGORI
              conditionalPanel(
                condition = "input.test_type == 'categorical'",
                ns = ns,
@@ -83,7 +83,7 @@ ujiProporsiUI <- function(id) {
                p("Menguji proporsi observasi dalam kategori tertentu"),
                
                # Pilih Variabel Kategorikal
-               selectInput(ns("cat_variable"), 
+               selectInput(ns("cat_variable"),
                            "Variabel Kategorikal:",
                            choices = NULL),
                
@@ -98,17 +98,17 @@ ujiProporsiUI <- function(id) {
                ),
                
                # Pilih Kategori Sukses
-               selectInput(ns("success_category"), 
+               selectInput(ns("success_category"),
                            "Kategori 'Sukses':",
                            choices = NULL),
                
                # Proporsi Hipotesis
-               numericInput(ns("cat_p0"), 
+               numericInput(ns("cat_p0"),
                             "Proporsi Hipotesis (p₀):",
                             value = 0.5, min = 0, max = 1, step = 0.01),
                
                # Hipotesis Alternatif
-               selectInput(ns("cat_alternative"), 
+               selectInput(ns("cat_alternative"),
                            "Hipotesis Alternatif:",
                            choices = list(
                              "Dua arah (≠)" = "two.sided",
@@ -117,7 +117,7 @@ ujiProporsiUI <- function(id) {
                            ))
              ),
              
-             # ========== UJI DUA PROPORSI ==========
+             # UJI DUA PROPORSI
              conditionalPanel(
                condition = "input.test_type == 'two_proportion'",
                ns = ns,
@@ -125,7 +125,7 @@ ujiProporsiUI <- function(id) {
                p("Membandingkan proporsi antara dua kelompok"),
                
                # Pilih Jenis Perbandingan
-               selectInput(ns("comparison_method"), 
+               selectInput(ns("comparison_method"),
                            "Metode Perbandingan:",
                            choices = list(
                              "Dua Provinsi (Prop. Kabupaten)" = "provinces",
@@ -152,7 +152,7 @@ ujiProporsiUI <- function(id) {
                ),
                
                # Hipotesis Alternatif
-               selectInput(ns("two_alternative"), 
+               selectInput(ns("two_alternative"),
                            "Hipotesis Alternatif:",
                            choices = list(
                              "Dua arah (≠)" = "two.sided",
@@ -161,22 +161,31 @@ ujiProporsiUI <- function(id) {
                            ))
              ),
              
-             numericInput(ns("alpha"), 
+             numericInput(ns("alpha"),
                           "Tingkat Signifikansi:",
                           value = 0.05, min = 0.01, max = 0.1, step = 0.01),
              
              br(),
-             actionButton(ns("run_test"), 
-                          "Jalankan Uji Proporsi", 
-                          class = "btn-success btn-lg"),
+             # Perbaikan: Tombol "Jalankan Uji Proporsi" agar rapi
+             actionButton(ns("run_test"),
+                          "Jalankan Uji Proporsi",
+                          class = "btn-success",
+                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px;"), # Gunakan display:block, margin:auto
              
              hr(),
-             h5("Download:"),
-             downloadButton(ns("download_results"), "Hasil", class = "btn-sm btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_plot"), "Plot", class = "btn-sm btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_report"), "Laporan", class = "btn-sm btn-info")
+             h5("Download Hasil:"),
+             # Perbaikan: Tombol Download agar rapi
+             downloadButton(ns("download_results"), "Hasil Uji",
+                            class = "btn-success",
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+             br(),
+             downloadButton(ns("download_plot"), "Plot Asumsi",
+                            class = "btn-success",
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+             br(),
+             downloadButton(ns("download_report"), "Laporan",
+                            class = "btn-success",
+                            style = "width: 90%; display: block; margin: auto;")
            )
     ),
     
@@ -216,30 +225,7 @@ ujiProporsiUI <- function(id) {
 # Fungsi server untuk uji proporsi
 ujiProporsiServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
-    
-    # ========== FUNGSI HELPER ==========
-    
-    # Format p-value
-    format_p_value <- function(p) {
-      if (p < 0.001) return("< 0.001")
-      if (p < 0.01) return(paste0("= ", round(p, 4)))
-      return(paste0("= ", round(p, 3)))
-    }
-    
-    # Theme untuk plot
-    theme_custom <- function() {
-      theme_minimal() +
-        theme(
-          plot.title = element_text(size = 14, face = "bold"),
-          plot.subtitle = element_text(size = 12),
-          axis.title = element_text(size = 11),
-          axis.text = element_text(size = 10),
-          legend.position = "bottom"
-        )
-    }
-    
-    # ========== UPDATE PILIHAN VARIABEL ==========
-    
+    # UPDATE PILIHAN VARIABEL 
     observe({
       req(values$current_data)
       
@@ -259,11 +245,11 @@ ujiProporsiServer <- function(id, values) {
         clean_categorical <- setdiff(categorical_vars, excluded_vars)
         
         if (length(clean_categorical) > 0) {
-          updateSelectInput(session, "cat_variable", 
+          updateSelectInput(session, "cat_variable",
                             choices = setNames(c("", clean_categorical), c("-- Pilih Variabel --", clean_categorical)))
-          updateSelectInput(session, "group_variable", 
+          updateSelectInput(session, "group_variable",
                             choices = setNames(c("", clean_categorical), c("-- Pilih Variabel --", clean_categorical)))
-          updateSelectInput(session, "target_variable", 
+          updateSelectInput(session, "target_variable",
                             choices = setNames(c("", clean_categorical), c("-- Pilih Variabel --", clean_categorical)))
         }
         
@@ -278,7 +264,7 @@ ujiProporsiServer <- function(id, values) {
         }
         
       }, error = function(e) {
-        showNotification("Error loading variables", type = "error")
+        show_notification("Error loading variables", type = "error") # Menggunakan show_notification
       })
     })
     
@@ -286,7 +272,7 @@ ujiProporsiServer <- function(id, values) {
     observeEvent(input$cat_variable, {
       if (!is.null(input$cat_variable) && input$cat_variable != "") {
         categories <- sort(unique(na.omit(values$current_data[[input$cat_variable]])))
-        updateSelectInput(session, "success_category", 
+        updateSelectInput(session, "success_category",
                           choices = setNames(c("", categories), c("-- Pilih Kategori --", categories)))
       }
     })
@@ -294,13 +280,12 @@ ujiProporsiServer <- function(id, values) {
     observeEvent(input$target_variable, {
       if (!is.null(input$target_variable) && input$target_variable != "") {
         categories <- sort(unique(na.omit(values$current_data[[input$target_variable]])))
-        updateSelectInput(session, "target_category", 
+        updateSelectInput(session, "target_category",
                           choices = setNames(c("", categories), c("-- Pilih Kategori --", categories)))
       }
     })
     
-    # ========== INFO VARIABEL ==========
-    
+    # INFO VARIABEL 
     output$admin_variable_info <- renderText({
       if (is.null(input$admin_variable) || input$admin_variable == "") {
         return("Pilih variabel terlebih dahulu")
@@ -309,7 +294,7 @@ ujiProporsiServer <- function(id, values) {
       var_data <- na.omit(values$current_data[[input$admin_variable]])
       if (length(var_data) == 0) return("Tidak ada data valid")
       
-      paste0("📊 STATISTIK VARIABEL:\n",
+      paste0("STATISTIK VARIABEL:\n",
              "Range: ", round(min(var_data), 2), " - ", round(max(var_data), 2), "\n",
              "Mean: ", round(mean(var_data), 2), " | Median: ", round(median(var_data), 2), "\n",
              "Total observasi: ", length(var_data))
@@ -326,13 +311,12 @@ ujiProporsiServer <- function(id, values) {
       freq_table <- table(var_data)
       freq_text <- paste(names(freq_table), ":", freq_table, collapse = " | ")
       
-      paste0("📊 DISTRIBUSI KATEGORI:\n",
+      paste0("DISTRIBUSI KATEGORI:\n",
              freq_text, "\n",
              "Total observasi: ", length(var_data))
     })
     
-    # ========== HASIL UJI ==========
-    
+    # HASIL UJI 
     test_results <- reactiveValues(
       results = NULL,
       plot = NULL,
@@ -344,7 +328,7 @@ ujiProporsiServer <- function(id, values) {
     observeEvent(input$run_test, {
       
       if (input$test_type == "administrative") {
-        # ========== UJI PROPORSI ADMINISTRATIF ==========
+        # UJI PROPORSI ADMINISTRATIF 
         
         req(input$admin_variable, input$admin_threshold, input$admin_p0)
         
@@ -369,13 +353,13 @@ ujiProporsiServer <- function(id, values) {
               .groups = 'drop'
             ) %>%
             dplyr::filter(!is.na(value)) %>%
-            dplyr::rename(CITY_NAME = PROVINCE_NAME)  # Untuk konsistensi
+            dplyr::rename(CITY_NAME = PROVINCE_NAME) # Untuk konsistensi
           
           unit_name <- "provinsi"
         }
         
         if (nrow(admin_data) < 5) {
-          showNotification("Data tidak mencukupi untuk uji proporsi (minimal 5 unit)", type = "error")
+          show_notification("Data tidak mencukupi untuk uji proporsi (minimal 5 unit)", type = "error") # Menggunakan show_notification
           return()
         }
         
@@ -386,11 +370,11 @@ ujiProporsiServer <- function(id, values) {
         
         # Cek syarat uji proporsi
         if (successes < 5 || (total - successes) < 5) {
-          showNotification("Warning: Syarat np ≥ 5 dan n(1-p) ≥ 5 tidak terpenuhi. Hasil mungkin tidak akurat.", type = "warning")
+          show_notification("Warning: Syarat np ≥ 5 dan n(1-p) ≥ 5 tidak terpenuhi. Hasil mungkin tidak akurat.", type = "warning") # Menggunakan show_notification
         }
         
         # Uji proporsi
-        test_result <- prop.test(successes, total, p = input$admin_p0, 
+        test_result <- prop.test(successes, total, p = input$admin_p0,
                                  alternative = input$admin_alternative, correct = TRUE)
         
         test_results$results <- test_result
@@ -413,7 +397,7 @@ ujiProporsiServer <- function(id, values) {
         
         test_results$plot <- ggplot(plot_data, aes(x = Status, y = Proporsi)) +
           geom_col(fill = c("lightcoral", "lightblue"), alpha = 0.7, color = "black") +
-          geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(n=", Jumlah, ")")), 
+          geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(n=", Jumlah, ")")),
                     vjust = -0.5, size = 4) +
           labs(title = paste("Proporsi", unit_name, "dengan", input$admin_variable, ">", input$admin_threshold),
                subtitle = paste("Total", unit_name, ":", total, "| Proporsi sukses:", round(proportion, 3)),
@@ -423,8 +407,7 @@ ujiProporsiServer <- function(id, values) {
         
         # Interpretasi
         test_results$interpretation <- paste0(
-          "INTERPRETASI UJI PROPORSI ADMINISTRATIF\n",
-          "=======================================\n\n",
+          "INTERPRETASI UJI PROPORSI ADMINISTRATIF\n\n",
           "ANALISIS: Proporsi ", unit_name, " dengan ", input$admin_variable, " > ", input$admin_threshold, "\n",
           "UNIT ANALISIS: ", total, " ", unit_name, "\n",
           "KRITERIA SUKSES: ", input$admin_variable, " > ", input$admin_threshold, "\n\n",
@@ -448,7 +431,7 @@ ujiProporsiServer <- function(id, values) {
         )
         
       } else if (input$test_type == "categorical") {
-        # ========== UJI PROPORSI KATEGORI ==========
+        # UJI PROPORSI KATEGORI
         
         req(input$cat_variable, input$success_category, input$cat_p0)
         
@@ -457,7 +440,7 @@ ujiProporsiServer <- function(id, values) {
           dplyr::filter(!is.na(.data[[input$cat_variable]]))
         
         if (nrow(valid_data) < 30) {
-          showNotification("Data tidak mencukupi untuk uji proporsi (minimal 30 observasi)", type = "error")
+          show_notification("Data tidak mencukupi untuk uji proporsi (minimal 30 observasi)", type = "error") # Menggunakan show_notification
           return()
         }
         
@@ -467,7 +450,7 @@ ujiProporsiServer <- function(id, values) {
         proportion <- successes / total
         
         # Uji proporsi
-        test_result <- prop.test(successes, total, p = input$cat_p0, 
+        test_result <- prop.test(successes, total, p = input$cat_p0,
                                  alternative = input$cat_alternative, correct = TRUE)
         
         test_results$results <- test_result
@@ -493,7 +476,7 @@ ujiProporsiServer <- function(id, values) {
         
         test_results$plot <- ggplot(plot_data, aes(x = Kategori, y = Proporsi, fill = Status)) +
           geom_col(alpha = 0.7, color = "black") +
-          geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(n=", Jumlah, ")")), 
+          geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(n=", Jumlah, ")")),
                     vjust = -0.5, size = 3.5) +
           scale_fill_manual(values = c("Sukses" = "lightblue", "Lainnya" = "lightgray")) +
           labs(title = paste("Distribusi Kategori:", input$cat_variable),
@@ -504,8 +487,7 @@ ujiProporsiServer <- function(id, values) {
         
         # Interpretasi
         test_results$interpretation <- paste0(
-          "INTERPRETASI UJI PROPORSI KATEGORI\n",
-          "==================================\n\n",
+          "INTERPRETASI UJI PROPORSI KATEGORI\n\n",
           "VARIABEL: ", input$cat_variable, "\n",
           "KATEGORI SUKSES: ", input$success_category, "\n",
           "TOTAL OBSERVASI: ", total, "\n\n",
@@ -531,13 +513,13 @@ ujiProporsiServer <- function(id, values) {
         )
         
       } else if (input$test_type == "two_proportion") {
-        # ========== UJI PERBANDINGAN DUA PROPORSI ==========
+        # UJI PERBANDINGAN DUA PROPORSI 
         
         if (input$comparison_method == "provinces") {
           req(input$prov_variable, input$prov_threshold, input$province1, input$province2)
           
           if (input$province1 == input$province2) {
-            showNotification("Pilih dua provinsi yang berbeda", type = "error")
+            show_notification("Pilih dua provinsi yang berbeda", type = "error") # Menggunakan show_notification
             return()
           }
           
@@ -548,6 +530,8 @@ ujiProporsiServer <- function(id, values) {
             dplyr::summarise(value = mean(.data[[input$prov_variable]], na.rm = TRUE), .groups = 'drop') %>%
             dplyr::filter(!is.na(value))
           
+          unit_name <- "kabupaten/kota"
+          
           # Data provinsi 2
           prov2_data <- values$current_data %>%
             dplyr::filter(PROVINCE_NAME == input$province2) %>%
@@ -556,7 +540,7 @@ ujiProporsiServer <- function(id, values) {
             dplyr::filter(!is.na(value))
           
           if (nrow(prov1_data) < 3 || nrow(prov2_data) < 3) {
-            showNotification("Setiap provinsi harus memiliki minimal 3 kabupaten/kota", type = "error")
+            show_notification("Setiap provinsi harus memiliki minimal 3 kabupaten/kota", type = "error") # Menggunakan show_notification
             return()
           }
           
@@ -598,7 +582,7 @@ ujiProporsiServer <- function(id, values) {
           
           test_results$plot <- ggplot(comparison_data, aes(x = Provinsi, y = Proporsi)) +
             geom_col(fill = c("lightblue", "lightcoral"), alpha = 0.7, color = "black") +
-            geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(", Jumlah_Sukses, "/", Total, ")")), 
+            geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(", Jumlah_Sukses, "/", Total, ")")),
                       vjust = -0.5, size = 4) +
             labs(title = paste("Perbandingan Proporsi Kabupaten dengan", input$prov_variable, ">", input$prov_threshold),
                  subtitle = paste("Perbedaan proporsi:", round(prop1 - prop2, 3)),
@@ -608,8 +592,7 @@ ujiProporsiServer <- function(id, values) {
           
           # Interpretasi
           test_results$interpretation <- paste0(
-            "INTERPRETASI UJI PERBANDINGAN DUA PROPORSI (PROVINSI)\n",
-            "=====================================================\n\n",
+            "INTERPRETASI UJI PERBANDINGAN DUA PROPORSI (PROVINSI)\n\n",
             "ANALISIS: Proporsi kabupaten dengan ", input$prov_variable, " > ", input$prov_threshold, "\n\n",
             "PROVINSI 1: ", input$province1, "\n",
             "- Jumlah kabupaten: ", total1, "\n",
@@ -645,7 +628,7 @@ ujiProporsiServer <- function(id, values) {
           # Cek jumlah kelompok
           groups <- unique(valid_data[[input$group_variable]])
           if (length(groups) != 2) {
-            showNotification("Variabel pengelompokan harus memiliki tepat 2 kategori", type = "error")
+            show_notification("Variabel pengelompokan harus memiliki tepat 2 kategori", type = "error") # Menggunakan show_notification
             return()
           }
           
@@ -654,7 +637,7 @@ ujiProporsiServer <- function(id, values) {
           group2_data <- valid_data[valid_data[[input$group_variable]] == groups[2], ]
           
           if (nrow(group1_data) < 10 || nrow(group2_data) < 10) {
-            showNotification("Setiap kelompok harus memiliki minimal 10 observasi", type = "error")
+            show_notification("Setiap kelompok harus memiliki minimal 10 observasi", type = "error") # Menggunakan show_notification
             return()
           }
           
@@ -697,7 +680,7 @@ ujiProporsiServer <- function(id, values) {
           
           test_results$plot <- ggplot(comparison_data, aes(x = Kelompok, y = Proporsi)) +
             geom_col(fill = c("lightblue", "lightcoral"), alpha = 0.7, color = "black") +
-            geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(", Jumlah_Sukses, "/", Total, ")")), 
+            geom_text(aes(label = paste0(round(Proporsi*100, 1), "%\n(", Jumlah_Sukses, "/", Total, ")")),
                       vjust = -0.5, size = 4) +
             labs(title = paste("Perbandingan Proporsi", input$target_category, "pada", input$target_variable),
                  subtitle = paste("Berdasarkan", input$group_variable, "| Perbedaan proporsi:", round(prop1 - prop2, 3)),
@@ -707,8 +690,7 @@ ujiProporsiServer <- function(id, values) {
           
           # Interpretasi
           test_results$interpretation <- paste0(
-            "INTERPRETASI UJI PERBANDINGAN DUA PROPORSI (KATEGORI)\n",
-            "=====================================================\n\n",
+            "INTERPRETASI UJI PERBANDINGAN DUA PROPORSI (KATEGORI)\n\n",
             "ANALISIS: Proporsi ", input$target_category, " pada ", input$target_variable, "\n",
             "PENGELOMPOKAN: ", input$group_variable, "\n\n",
             "KELOMPOK 1: ", groups[1], "\n",
@@ -738,13 +720,11 @@ ujiProporsiServer <- function(id, values) {
       }
     })
     
-    # ========== OUTPUT ==========
-    
+    # OUTPUT 
     output$test_results <- renderPrint({
       req(test_results$results)
       
       cat("HASIL UJI PROPORSI\n")
-      cat("==================\n\n")
       
       if (!is.null(test_results$summary)) {
         summary <- test_results$summary
@@ -768,9 +748,9 @@ ujiProporsiServer <- function(id, values) {
           
         } else if (summary$type %in% c("two_proportion_provinces", "two_proportion_categories")) {
           cat("Jenis Uji: Perbandingan Dua Proporsi\n")
-          cat("Kelompok 1:", summary$group1, "- Proporsi:", round(summary$prop1, 4), 
+          cat("Kelompok 1:", summary$group1, "- Proporsi:", round(summary$prop1, 4),
               "(", summary$successes1, "/", summary$total1, ")\n")
-          cat("Kelompok 2:", summary$group2, "- Proporsi:", round(summary$prop2, 4), 
+          cat("Kelompok 2:", summary$group2, "- Proporsi:", round(summary$prop2, 4),
               "(", summary$successes2, "/", summary$total2, ")\n")
           cat("Perbedaan Proporsi:", round(summary$prop1 - summary$prop2, 4), "\n\n")
         }
@@ -790,22 +770,20 @@ ujiProporsiServer <- function(id, values) {
       test_results$interpretation
     })
     
-    # ========== DOWNLOAD HANDLERS ==========
-    
+    # DOWNLOAD HANDLERS 
     output$download_results <- downloadHandler(
       filename = function() paste("uji_proporsi_hasil_", Sys.Date(), ".txt", sep=""),
       content = function(file) {
-        if (!is.null(test_results$results)) {
+        tryCatch({ # Tambah tryCatch
+          req(test_results$results)
           sink(file)
-          cat("HASIL UJI PROPORSI\n")
-          cat("==================\n\n")
+          cat("HASIL UJI PROPORSI\n\n")
           cat("Tanggal Analisis:", as.character(Sys.Date()), "\n")
           cat("Waktu Analisis:", as.character(Sys.time()), "\n\n")
           
           if (!is.null(test_results$summary)) {
             summary <- test_results$summary
             cat("RINGKASAN ANALISIS:\n")
-            cat("===================\n")
             
             if (summary$type == "administrative") {
               cat("Jenis Uji: Proporsi Unit Administratif\n")
@@ -815,52 +793,72 @@ ujiProporsiServer <- function(id, values) {
               cat("Total Unit:", summary$total, "\n")
               cat("Unit Sukses:", summary$successes, "\n")
               cat("Proporsi Sampel:", round(summary$proportion, 4), "\n\n")
+            } else if (summary$type == "categorical") { # Tambahkan ini untuk ringkasan kategori
+              cat("Jenis Uji: Proporsi Kategori\n")
+              cat("Variabel:", summary$variable, "\n")
+              cat("Kategori Sukses:", summary$success_category, "\n")
+              cat("Total Observasi:", summary$total, "\n")
+              cat("Observasi Sukses:", summary$successes, "\n")
+              cat("Proporsi Sampel:", round(summary$proportion, 4), "\n\n")
+            } else if (summary$type %in% c("two_proportion_provinces", "two_proportion_categories")) { # Tambahkan ini untuk ringkasan dua proporsi
+              cat("Jenis Uji: Perbandingan Dua Proporsi\n")
+              cat("Kelompok 1:", summary$group1, "- Proporsi:", round(summary$prop1, 4),
+                  "(", summary$successes1, "/", summary$total1, ")\n")
+              cat("Kelompok 2:", summary$group2, "- Proporsi:", round(summary$prop2, 4),
+                  "(", summary$successes2, "/", summary$total2, ")\n")
+              cat("Perbedaan Proporsi:", round(summary$prop1 - summary$prop2, 4), "\n\n")
             }
           }
           
-          cat("HASIL STATISTIK UJI:\n")
-          cat("====================\n")
+          cat("HASIL STATISTIK UJI:\n\n")
           print(test_results$results)
           
-          cat("\n\nINTERPRETASI:\n")
-          cat("=============\n")
+          cat("\n\nINTERPRETASI:\n\n")
           cat(test_results$interpretation)
           
           sink()
-        }
+          show_notification("Hasil uji berhasil diunduh!", type = "success") # Menggunakan show_notification
+        }, error = function(e) {
+          show_notification(paste("Gagal mengunduh hasil uji:", e$message), type = "error") # Menggunakan show_notification
+        })
       }
     )
     
     output$download_plot <- downloadHandler(
       filename = function() paste("uji_proporsi_plot_", Sys.Date(), ".png", sep=""),
       content = function(file) {
-        if (!is.null(test_results$plot)) {
+        tryCatch({ # Tambah tryCatch
+          req(test_results$plot)
           ggsave(file, test_results$plot, width = 12, height = 8, dpi = 300)
-        }
+          show_notification("Plot berhasil diunduh!", type = "success") # Menggunakan show_notification
+        }, error = function(e) {
+          show_notification(paste("Gagal mengunduh plot:", e$message), type = "error") # Menggunakan show_notification
+        })
       }
     )
     
     output$download_report <- downloadHandler(
       filename = function() paste("laporan_uji_proporsi_", Sys.Date(), ".docx", sep=""),
       content = function(file) {
-        if (!is.null(test_results$interpretation) && !is.null(test_results$results)) {
+        tryCatch({ # Tambah tryCatch
+          req(test_results$interpretation, test_results$results)
+          # test_results$plot tidak di-req di sini karena bisa null, dicheck terpisah
           
-          # Buat dokumen Word
           doc <- officer::read_docx()
           
           # Header
           doc <- doc %>%
             officer::body_add_par("LAPORAN UJI PROPORSI", style = "heading 1") %>%
             officer::body_add_par(paste("Tanggal:", Sys.Date())) %>%
-            officer::body_add_par(paste("Waktu:", Sys.time())) %>%
+            officer::body_add_par(paste("Waktu:", format(Sys.time(), "%H:%M:%S"))) %>% # Format waktu
             officer::body_add_par(" ")
           
-          # Ringkasan
+          # Ringkasan Analisis
+          doc <- doc %>%
+            officer::body_add_par("Ringkasan Analisis", style = "heading 2")
+          
           if (!is.null(test_results$summary)) {
             summary <- test_results$summary
-            doc <- doc %>%
-              officer::body_add_par("Ringkasan Analisis", style = "heading 2")
-            
             if (summary$type == "administrative") {
               doc <- doc %>%
                 officer::body_add_par(paste("Jenis Uji: Proporsi Unit Administratif")) %>%
@@ -878,16 +876,33 @@ ujiProporsiServer <- function(id, values) {
                 officer::body_add_par(paste("Total Observasi:", summary$total)) %>%
                 officer::body_add_par(paste("Observasi Sukses:", summary$successes)) %>%
                 officer::body_add_par(paste("Proporsi Sampel:", round(summary$proportion, 4)))
+            } else if (summary$type %in% c("two_proportion_provinces", "two_proportion_categories")) {
+              doc <- doc %>%
+                officer::body_add_par(paste("Jenis Uji: Perbandingan Dua Proporsi")) %>%
+                officer::body_add_par(paste("Kelompok 1:", summary$group1, "- Proporsi:", round(summary$prop1, 4), "(", summary$successes1, "/", summary$total1, ")")) %>%
+                officer::body_add_par(paste("Kelompok 2:", summary$group2, "- Proporsi:", round(summary$prop2, 4), "(", summary$successes2, "/", summary$total2, ")")) %>%
+                officer::body_add_par(paste("Perbedaan Proporsi:", round(summary$prop1 - summary$prop2, 4)))
+              if (summary$type == "two_proportion_provinces") {
+                doc <- doc %>%
+                  officer::body_add_par(paste("Variabel Numerik:", summary$variable)) %>%
+                  officer::body_add_par(paste("Threshold:", summary$threshold))
+              } else { # two_proportion_categories
+                doc <- doc %>%
+                  officer::body_add_par(paste("Variabel Pengelompokan:", summary$group_variable)) %>%
+                  officer::body_add_par(paste("Variabel Target:", summary$target_variable)) %>%
+                  officer::body_add_par(paste("Kategori Target:", summary$target_category))
+              }
             }
           }
           
-          # Hasil Statistik
+          # Hasil Statistik Uji
           doc <- doc %>%
             officer::body_add_par(" ") %>%
             officer::body_add_par("Hasil Statistik Uji", style = "heading 2") %>%
-            officer::body_add_par(capture.output(print(test_results$results)))
+            # PERBAIKAN: Gunakan paste(..., collapse = "\n")
+            officer::body_add_par(paste(capture.output(print(test_results$results)), collapse = "\n"))
           
-          # Plot
+          # Visualisasi
           if (!is.null(test_results$plot)) {
             temp_file <- tempfile(fileext = ".png")
             ggsave(temp_file, test_results$plot, width = 10, height = 6, dpi = 300)
@@ -909,10 +924,13 @@ ujiProporsiServer <- function(id, values) {
             officer::body_add_par(" ") %>%
             officer::body_add_par("---") %>%
             officer::body_add_par("Laporan dibuat secara otomatis oleh sistem analisis statistik") %>%
-            officer::body_add_par(paste("Generated on:", Sys.time()))
+            officer::body_add_par(paste("Generated on:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"))) # Format waktu lengkap
           
           print(doc, target = file)
-        }
+          show_notification("Laporan Word berhasil dibuat!", type = "success") # Menggunakan show_notification
+        }, error = function(e) {
+          show_notification(paste("Error saat membuat laporan Word:", e$message), type = "error") # Menggunakan show_notification
+        })
       }
     )
   })

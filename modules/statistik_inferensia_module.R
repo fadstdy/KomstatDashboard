@@ -85,7 +85,7 @@ statistikInferensiaUI <- function(id) {
            conditionalPanel(
              condition = "output.show_chi_panel == true",
              ns = ns,
-             ujiChiSquareUI(ns("uji_chi"))
+             ujiVariansUI(ns("uji_chi"))
            )
     )
   )
@@ -158,6 +158,6 @@ statistikInferensiaServer <- function(id, values) {
     ujiTServer("uji_t", values)
     ujiProporsiServer("uji_proporsi", values)
     ujiAnovaServer("uji_anova", values)
-    ujiChiSquareServer("uji_chi", values)
+    ujiVariansServer("uji_chi", values)
   })
 }

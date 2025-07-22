@@ -64,7 +64,7 @@ ujiTUI <- function(id) {
              div(style = "width: 90%;",
                  actionButton(ns("run_test"),
                               "Jalankan Uji t",
-                              class = "btn-success",
+                              class = "btn-info",
                               style = "width: 90%; margin-bottom: 10px;") # Lebar 90%
              ),
              br(),
@@ -72,17 +72,17 @@ ujiTUI <- function(id) {
              h5("Download Hasil:"),
              div(style = "width: 90%;",
                  downloadButton(ns("download_results"),
-                                "Download Hasil Uji",
-                                class = "btn-primary",
+                                "Hasil Uji",
+                                class = "btn-info",
                                 style = "width: 90%; margin-bottom: 5px;"), # Lebar 90%
                  br(),
                  downloadButton(ns("download_plot"),
-                                "Download Plot Asumsi",
-                                class = "btn-primary",
+                                "Plot Asumsi",
+                                class = "btn-info",
                                 style = "width: 90%; margin-bottom: 5px;"), # Lebar 90%
                  br(),
                  downloadButton(ns("download_report"),
-                                "Download Laporan",
+                                "Laporan",
                                 class = "btn-info",
                                 style = "width: 90%;") # Lebar 90%
              )
@@ -396,16 +396,25 @@ ujiTServer <- function(id, values) {
     output$download_report <- downloadHandler(
       filename = function() paste("uji_t_laporan_", Sys.Date(), ".docx", sep=""),
       content = function(file) {
-        if (!is.null(test_results$interpretation)) {
+        tryCatch({ # Tambah tryCatch
+          req(test_results$results,
+              test_results$interpretation,
+              input$test_type,
+              input$variable)
+          # test_results$plot tidak di-req di sini karena bisa null, dicheck terpisah
+          
           doc <- officer::read_docx()
           doc <- doc %>%
             officer::body_add_par("Laporan Uji t", style = "heading 1") %>%
             officer::body_add_par(paste("Tanggal:", Sys.Date())) %>%
             officer::body_add_par(paste("Variabel:", input$variable)) %>%
-            officer::body_add_par(paste("Jenis Uji:", input$test_type)) %>%
+            officer::body_add_par(paste("Jenis Uji:", switch(input$test_type,
+                                                             "one_sample" = "Uji t Satu Sampel",
+                                                             "two_sample" = "Uji t Dua Sampel Independen"))) %>%
             officer::body_add_par(" ") %>%
             officer::body_add_par("Hasil Uji:", style = "heading 2") %>%
-            officer::body_add_par(capture.output(print(test_results$results))) %>%
+            # PERBAIKAN: Gunakan paste(..., collapse = "\n")
+            officer::body_add_par(paste(capture.output(print(test_results$results)), collapse = "\n")) %>%
             officer::body_add_par(" ") %>%
             officer::body_add_par("Interpretasi:", style = "heading 2") %>%
             officer::body_add_par(test_results$interpretation)
@@ -420,7 +429,10 @@ ujiTServer <- function(id, values) {
           }
           
           print(doc, target = file)
-        }
+          show_notification("Laporan Word berhasil dibuat!", type = "success") # Menggunakan show_notification
+        }, error = function(e) {
+          show_notification(paste("Error saat membuat laporan Word:", e$message), type = "error") # Menggunakan show_notification
+        })
       }
     )
   })

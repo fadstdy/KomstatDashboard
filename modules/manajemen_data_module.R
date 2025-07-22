@@ -122,7 +122,7 @@ manajemenDataUI <- function(id) {
                tabPanel("Visualisasi",
                         br(),
                         withSpinner(plotOutput(ns("after_plot")))),
-              
+               
                
                tabPanel("Data Preview",
                         br(),

@@ -1,10 +1,7 @@
 # Uji ANOVA Module
 # modules/uji_anova_module.R
 
-# ==========================================
 # UJI ANOVA - UI FUNCTION
-# ==========================================
-
 ujiAnovaUI <- function(id) {
   ns <- NS(id)
   
@@ -17,14 +14,14 @@ ujiAnovaUI <- function(id) {
              solidHeader = TRUE,
              width = 12,
              
-             selectInput(ns("test_type"), 
+             selectInput(ns("test_type"),
                          "Jenis Uji ANOVA:",
                          choices = list(
                            "ANOVA Satu Arah" = "one_way",
                            "ANOVA Dua Arah" = "two_way"
                          )),
              
-             selectInput(ns("dependent_variable"), 
+             selectInput(ns("dependent_variable"),
                          "Variabel Dependen (Numerik):",
                          choices = NULL),
              
@@ -32,7 +29,7 @@ ujiAnovaUI <- function(id) {
              conditionalPanel(
                condition = "input.test_type == 'one_way'",
                ns = ns,
-               selectInput(ns("factor_variable"), 
+               selectInput(ns("factor_variable"),
                            "Variabel Faktor (Pengelompokan):",
                            choices = NULL),
                helpText("Minimal 3 kelompok untuk analisis yang bermakna")
@@ -42,19 +39,19 @@ ujiAnovaUI <- function(id) {
              conditionalPanel(
                condition = "input.test_type == 'two_way'",
                ns = ns,
-               selectInput(ns("factor1"), 
+               selectInput(ns("factor1"),
                            "Faktor 1:",
                            choices = NULL),
-               selectInput(ns("factor2"), 
+               selectInput(ns("factor2"),
                            "Faktor 2:",
                            choices = NULL),
-               checkboxInput(ns("include_interaction"), 
-                             "Sertakan Efek Interaksi", 
+               checkboxInput(ns("include_interaction"),
+                             "Sertakan Efek Interaksi",
                              value = TRUE),
                helpText("Efek interaksi menguji apakah efek faktor 1 bergantung pada faktor 2")
              ),
              
-             numericInput(ns("alpha"), 
+             numericInput(ns("alpha"),
                           "Tingkat Signifikansi:",
                           value = 0.05, min = 0.01, max = 0.1, step = 0.01),
              
@@ -62,7 +59,7 @@ ujiAnovaUI <- function(id) {
              conditionalPanel(
                condition = "input.test_type == 'one_way'",
                ns = ns,
-               selectInput(ns("posthoc_method"), 
+               selectInput(ns("posthoc_method"),
                            "Metode Post-hoc (jika signifikan):",
                            choices = list(
                              "Tukey HSD" = "tukey",
@@ -73,17 +70,25 @@ ujiAnovaUI <- function(id) {
              ),
              
              br(),
-             actionButton(ns("run_test"), 
-                          "Jalankan Uji ANOVA", 
-                          class = "btn-warning btn-lg"),
+             # Perbaikan: Tombol "Jalankan Uji ANOVA" agar rapi
+             actionButton(ns("run_test"),
+                          "Jalankan Uji ANOVA",
+                          class = "btn-warning", # Menghapus btn-lg untuk ukuran yang lebih standar
+                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px; font-size:18px;"), # Menyesuaikan style
              
              hr(),
-             h5("📥 Download:"),
-             downloadButton(ns("download_results"), "Hasil", class = "btn-sm btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_plot"), "Plot", class = "btn-sm btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_report"), "Laporan", class = "btn-sm btn-info")
+             h5("Download:"),
+             downloadButton(ns("download_results"), "Hasil Uji",
+                            class = "btn-warning",
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+             br(),
+             downloadButton(ns("download_plot"), "Plot Asumsi",
+                            class = "btn-warning",
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+             br(),
+             downloadButton(ns("download_report"), "Laporan",
+                            class = "btn-warning",
+                            style = "width: 90%; display: block; margin: auto;")
            )
     ),
     
@@ -134,10 +139,7 @@ ujiAnovaUI <- function(id) {
   )
 }
 
-# ==========================================
 # UJI ANOVA - SERVER FUNCTION
-# ==========================================
-
 ujiAnovaServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
     
@@ -159,7 +161,7 @@ ujiAnovaServer <- function(id, values) {
         })
       ]
       
-      updateSelectInput(session, "dependent_variable", 
+      updateSelectInput(session, "dependent_variable",
                         choices = setNames(numeric_vars, numeric_vars))
       
       if (length(valid_factors) > 0) {
@@ -169,21 +171,21 @@ ujiAnovaServer <- function(id, values) {
           paste0(var, " (", n_groups, " kelompok)")
         })
         
-        updateSelectInput(session, "factor_variable", 
-                          choices = setNames(c("", valid_factors), 
+        updateSelectInput(session, "factor_variable",
+                          choices = setNames(c("", valid_factors),
                                              c("-- Pilih Faktor --", factor_labels)))
-        updateSelectInput(session, "factor1", 
-                          choices = setNames(c("", valid_factors), 
+        updateSelectInput(session, "factor1",
+                          choices = setNames(c("", valid_factors),
                                              c("-- Pilih Faktor 1 --", factor_labels)))
-        updateSelectInput(session, "factor2", 
-                          choices = setNames(c("", valid_factors), 
+        updateSelectInput(session, "factor2",
+                          choices = setNames(c("", valid_factors),
                                              c("-- Pilih Faktor 2 --", factor_labels)))
       } else {
-        updateSelectInput(session, "factor_variable", 
+        updateSelectInput(session, "factor_variable",
                           choices = list("-- Tidak ada variabel faktor yang valid --" = ""))
-        updateSelectInput(session, "factor1", 
+        updateSelectInput(session, "factor1",
                           choices = list("-- Tidak ada variabel faktor yang valid --" = ""))
-        updateSelectInput(session, "factor2", 
+        updateSelectInput(session, "factor2",
                           choices = list("-- Tidak ada variabel faktor yang valid --" = ""))
       }
     })
@@ -213,29 +215,29 @@ ujiAnovaServer <- function(id, values) {
         req(input$factor_variable)
         
         if (input$factor_variable == "") {
-          showNotification("Silakan pilih variabel faktor", type = "warning")
+          show_notification("Silakan pilih variabel faktor", type = "warning") # Menggunakan show_notification
           return()
         }
         
         # Validasi data
-        complete_data <- data[complete.cases(data[[input$dependent_variable]], 
+        complete_data <- data[complete.cases(data[[input$dependent_variable]],
                                              data[[input$factor_variable]]), ]
         
         if (nrow(complete_data) < 6) {
-          showNotification("Data tidak cukup untuk ANOVA (minimal 6 observasi)", type = "error")
+          show_notification("Data tidak cukup untuk ANOVA (minimal 6 observasi)", type = "error") # Menggunakan show_notification
           return()
         }
         
         groups <- unique(complete_data[[input$factor_variable]])
         if (length(groups) < 2) {
-          showNotification("Minimal harus ada 2 kelompok untuk ANOVA", type = "error")
+          show_notification("Minimal harus ada 2 kelompok untuk ANOVA", type = "error") # Menggunakan show_notification
           return()
         }
         
         # Cek ukuran setiap kelompok
         group_sizes <- table(complete_data[[input$factor_variable]])
         if (any(group_sizes < 2)) {
-          showNotification("Setiap kelompok harus memiliki minimal 2 observasi", type = "error")
+          show_notification("Setiap kelompok harus memiliki minimal 2 observasi", type = "error") # Menggunakan show_notification
           return()
         }
         
@@ -246,13 +248,13 @@ ujiAnovaServer <- function(id, values) {
         test_results$results <- anova_summary
         
         # Plot ANOVA
-        test_results$plot <- ggplot(complete_data, aes(x = .data[[input$factor_variable]], 
+        test_results$plot <- ggplot(complete_data, aes(x = .data[[input$factor_variable]],
                                                        y = .data[[input$dependent_variable]])) +
           geom_boxplot(aes(fill = .data[[input$factor_variable]]), alpha = 0.7) +
           geom_jitter(width = 0.2, alpha = 0.5, size = 1) +
           stat_summary(fun = mean, geom = "point", color = "red", size = 3, shape = 18) +
-          stat_summary(fun = mean, geom = "text", 
-                       aes(label = paste("μ =", round(..y.., 2))), 
+          stat_summary(fun = mean, geom = "text",
+                       aes(label = paste("μ =", round(..y.., 2))),
                        vjust = -0.5, color = "red", size = 3) +
           scale_fill_brewer(palette = "Set3") +
           labs(title = paste("ANOVA Satu Arah:", input$dependent_variable, "berdasarkan", input$factor_variable),
@@ -263,6 +265,9 @@ ujiAnovaServer <- function(id, values) {
                 legend.position = "none")
         
         # Post-hoc test jika signifikan
+        test_results$show_posthoc <- FALSE # Reset status post-hoc
+        test_results$posthoc <- NULL # Clear previous posthoc results
+        
         if (length(anova_summary) > 0 && "Pr(>F)" %in% names(anova_summary[[1]])) {
           p_value <- anova_summary[[1]][["Pr(>F)"]][1]
           if (!is.na(p_value) && p_value < input$alpha) {
@@ -276,16 +281,16 @@ ujiAnovaServer <- function(id, values) {
               posthoc_table <- posthoc_table[, c("Comparison", "diff", "lwr", "upr", "p adj")]
               names(posthoc_table) <- c("Perbandingan", "Perbedaan", "Batas_Bawah", "Batas_Atas", "P_adjusted")
             } else if (input$posthoc_method == "bonferroni") {
-              posthoc_result <- pairwise.t.test(complete_data[[input$dependent_variable]], 
-                                                complete_data[[input$factor_variable]], 
+              posthoc_result <- pairwise.t.test(complete_data[[input$dependent_variable]],
+                                                complete_data[[input$factor_variable]],
                                                 p.adjust.method = "bonferroni")
               posthoc_matrix <- posthoc_result$p.value
               posthoc_table <- as.data.frame(as.table(posthoc_matrix))
               names(posthoc_table) <- c("Grup1", "Grup2", "P_adjusted")
               posthoc_table <- posthoc_table[!is.na(posthoc_table$P_adjusted), ]
             } else { # LSD
-              posthoc_result <- pairwise.t.test(complete_data[[input$dependent_variable]], 
-                                                complete_data[[input$factor_variable]], 
+              posthoc_result <- pairwise.t.test(complete_data[[input$dependent_variable]],
+                                                complete_data[[input$factor_variable]],
                                                 p.adjust.method = "none")
               posthoc_matrix <- posthoc_result$p.value
               posthoc_table <- as.data.frame(as.table(posthoc_matrix))
@@ -322,8 +327,7 @@ ujiAnovaServer <- function(id, values) {
             )
           
           test_results$interpretation <- paste(
-            "INTERPRETASI ANOVA SATU ARAH:\n",
-            "============================\n\n",
+            "INTERPRETASI ANOVA SATU ARAH:\n\n",
             "VARIABEL YANG DIANALISIS:\n",
             "- Variabel dependen:", input$dependent_variable, "\n",
             "- Variabel faktor:", input$factor_variable, "\n",
@@ -349,16 +353,16 @@ ujiAnovaServer <- function(id, values) {
             }, "\n\n",
             "INTERPRETASI PRAKTIS:\n",
             if (p_value < input$alpha) {
-              paste("Terdapat perbedaan yang bermakna pada", input$dependent_variable, 
+              paste("Terdapat perbedaan yang bermakna pada", input$dependent_variable,
                     "berdasarkan", input$factor_variable, ".",
                     "Lihat hasil uji Post-hoc untuk mengetahui kelompok mana yang berbeda secara spesifik.")
             } else {
-              paste("Semua kelompok", input$factor_variable, "memiliki rata-rata", input$dependent_variable, 
+              paste("Semua kelompok", input$factor_variable, "memiliki rata-rata", input$dependent_variable,
                     "yang secara statistik tidak berbeda. Variasi yang diamati bisa disebabkan oleh faktor acak.")
             }, "\n\n",
             if (test_results$show_posthoc) {
               paste("UJI POST-HOC:\n",
-                    "Karena ANOVA signifikan, dilakukan uji post-hoc (", input$posthoc_method, 
+                    "Karena ANOVA signifikan, dilakukan uji post-hoc (", input$posthoc_method,
                     ") untuk mengetahui kelompok mana yang berbeda secara spesifik.")
             } else {
               "UJI POST-HOC:\nTidak dilakukan karena ANOVA tidak signifikan."
@@ -370,30 +374,30 @@ ujiAnovaServer <- function(id, values) {
         req(input$factor1, input$factor2)
         
         if (input$factor1 == "" || input$factor2 == "") {
-          showNotification("Silakan pilih kedua faktor", type = "warning")
+          show_notification("Silakan pilih kedua faktor", type = "warning") # Menggunakan show_notification
           return()
         }
         
         if (input$factor1 == input$factor2) {
-          showNotification("Pilih dua faktor yang berbeda", type = "warning")
+          show_notification("Pilih dua faktor yang berbeda", type = "warning") # Menggunakan show_notification
           return()
         }
         
         # Validasi data
-        complete_data <- data[complete.cases(data[[input$dependent_variable]], 
-                                             data[[input$factor1]], 
+        complete_data <- data[complete.cases(data[[input$dependent_variable]],
+                                             data[[input$factor1]],
                                              data[[input$factor2]]), ]
         
         if (nrow(complete_data) < 12) {
-          showNotification("Data tidak cukup untuk ANOVA dua arah (minimal 12 observasi)", type = "error")
+          show_notification("Data tidak cukup untuk ANOVA dua arah (minimal 12 observasi)", type = "error") # Menggunakan show_notification
           return()
         }
         
         # Cek kombinasi faktor
         factor_combinations <- table(complete_data[[input$factor1]], complete_data[[input$factor2]])
         if (any(factor_combinations == 0)) {
-          showNotification("Beberapa kombinasi faktor tidak memiliki data. ANOVA dua arah memerlukan data di semua kombinasi.", 
-                           type = "warning")
+          show_notification("Beberapa kombinasi faktor tidak memiliki data. ANOVA dua arah memerlukan data di semua kombinasi.", # Menggunakan show_notification
+                            type = "warning")
         }
         
         # ANOVA Dua Arah
@@ -418,13 +422,13 @@ ujiAnovaServer <- function(id, values) {
               .groups = 'drop'
             )
           
-          test_results$plot <- ggplot(interaction_data, aes(x = .data[[input$factor1]], 
-                                                            y = mean_val, 
+          test_results$plot <- ggplot(interaction_data, aes(x = .data[[input$factor1]],
+                                                            y = mean_val,
                                                             color = .data[[input$factor2]],
                                                             group = .data[[input$factor2]])) +
             geom_line(linewidth = 1.2) +
             geom_point(size = 3) +
-            geom_errorbar(aes(ymin = mean_val - se, ymax = mean_val + se), 
+            geom_errorbar(aes(ymin = mean_val - se, ymax = mean_val + se),
                           width = 0.1, alpha = 0.7) +
             scale_color_brewer(palette = "Set2") +
             labs(title = paste("Plot Interaksi ANOVA Dua Arah:", input$dependent_variable),
@@ -435,7 +439,7 @@ ujiAnovaServer <- function(id, values) {
             theme(axis.text.x = element_text(angle = 45, hjust = 1))
         } else {
           # Boxplot untuk main effects
-          test_results$plot <- ggplot(complete_data, aes(x = .data[[input$factor1]], 
+          test_results$plot <- ggplot(complete_data, aes(x = .data[[input$factor1]],
                                                          y = .data[[input$dependent_variable]])) +
             geom_boxplot(aes(fill = .data[[input$factor2]]), alpha = 0.7) +
             scale_fill_brewer(palette = "Set3") +
@@ -455,8 +459,7 @@ ujiAnovaServer <- function(id, values) {
           effects <- rownames(anova_table)[1:(nrow(anova_table)-1)] # exclude Residuals
           
           interpretation_text <- paste(
-            "INTERPRETASI ANOVA DUA ARAH:\n",
-            "===========================\n\n",
+            "INTERPRETASI ANOVA DUA ARAH:\n\n",
             "VARIABEL YANG DIANALISIS:\n",
             "- Variabel dependen:", input$dependent_variable, "\n",
             "- Faktor 1:", input$factor1, "\n",
@@ -494,9 +497,9 @@ ujiAnovaServer <- function(id, values) {
             
             interpretation_text <- paste(interpretation_text,
                                          "- ", effect_name, ":\n",
-                                         "  * F =", round(f_val, 4), ", df =", df1, 
+                                         "  * F =", round(f_val, 4), ", df =", df1,
                                          ", p-value =", format_p_value(p_val), "\n",
-                                         "  * Kesimpulan:", 
+                                         "  * Kesimpulan:",
                                          ifelse(p_val < input$alpha, "SIGNIFIKAN", "TIDAK SIGNIFIKAN"), "\n"
             )
           }
@@ -562,34 +565,60 @@ ujiAnovaServer <- function(id, values) {
     output$download_results <- downloadHandler(
       filename = function() paste("uji_anova_hasil_", Sys.Date(), ".txt", sep=""),
       content = function(file) {
-        if (!is.null(test_results$results)) {
+        tryCatch({ # Tambah tryCatch
+          req(test_results$results)
           writeLines(capture.output(print(test_results$results)), file)
-        }
+          show_notification("Hasil uji berhasil diunduh!", type = "success") # Menggunakan show_notification
+        }, error = function(e) {
+          show_notification(paste("Gagal mengunduh hasil uji:", e$message), type = "error") # Menggunakan show_notification
+        })
       }
     )
     
     output$download_plot <- downloadHandler(
       filename = function() paste("uji_anova_plot_", Sys.Date(), ".png", sep=""),
       content = function(file) {
-        if (!is.null(test_results$plot)) {
+        tryCatch({ # Tambah tryCatch
+          req(test_results$plot)
           ggsave(file, test_results$plot, width = 12, height = 8, dpi = 300)
-        }
+          show_notification("Plot berhasil diunduh!", type = "success") # Menggunakan show_notification
+        }, error = function(e) {
+          show_notification(paste("Gagal mengunduh plot:", e$message), type = "error") # Menggunakan show_notification
+        })
       }
     )
     
     output$download_report <- downloadHandler(
       filename = function() paste("uji_anova_laporan_", Sys.Date(), ".docx", sep=""),
       content = function(file) {
-        if (!is.null(test_results$interpretation)) {
+        tryCatch({ # Tambah tryCatch
+          req(test_results$interpretation, test_results$results)
+          # test_results$plot dan test_results$posthoc tidak di-req di sini karena bisa null, dicheck terpisah
+          
           doc <- officer::read_docx()
           doc <- doc %>%
             officer::body_add_par("Laporan Uji ANOVA", style = "heading 1") %>%
             officer::body_add_par(paste("Tanggal:", Sys.Date())) %>%
+            officer::body_add_par(paste("Waktu:", format(Sys.time(), "%H:%M:%S"))) %>% # Format waktu
             officer::body_add_par(paste("Variabel Dependen:", input$dependent_variable)) %>%
-            officer::body_add_par(paste("Jenis ANOVA:", input$test_type)) %>%
+            officer::body_add_par(paste("Jenis ANOVA:", switch(input$test_type,
+                                                               "one_way" = "ANOVA Satu Arah",
+                                                               "two_way" = "ANOVA Dua Arah")))
+          
+          if (input$test_type == "one_way") {
+            doc <- doc %>% officer::body_add_par(paste("Variabel Faktor:", input$factor_variable))
+          } else { # two_way
+            doc <- doc %>%
+              officer::body_add_par(paste("Faktor 1:", input$factor1)) %>%
+              officer::body_add_par(paste("Faktor 2:", input$factor2)) %>%
+              officer::body_add_par(paste("Efek Interaksi:", ifelse(input$include_interaction, "Ya", "Tidak")))
+          }
+          
+          doc <- doc %>%
             officer::body_add_par(" ") %>%
             officer::body_add_par("Hasil Uji:", style = "heading 2") %>%
-            officer::body_add_par(capture.output(print(test_results$results))) %>%
+            # PERBAIKAN: Gunakan paste(..., collapse = "\n")
+            officer::body_add_par(paste(capture.output(print(test_results$results)), collapse = "\n")) %>%
             officer::body_add_par(" ") %>%
             officer::body_add_par("Interpretasi:", style = "heading 2") %>%
             officer::body_add_par(test_results$interpretation)
@@ -598,19 +627,32 @@ ujiAnovaServer <- function(id, values) {
             temp_file <- tempfile(fileext = ".png")
             ggsave(temp_file, test_results$plot, width = 10, height = 6, dpi = 300)
             doc <- doc %>%
+              officer::body_add_par(" ") %>%
               officer::body_add_par("Visualisasi:", style = "heading 2") %>%
               officer::body_add_img(temp_file, width = 8, height = 5)
             unlink(temp_file)
           }
           
-          if (!is.null(test_results$posthoc)) {
+          # Tambahkan hasil Post-hoc jika ada
+          if (!is.null(test_results$posthoc) && test_results$show_posthoc) {
             doc <- doc %>%
+              officer::body_add_par(" ") %>%
               officer::body_add_par("Uji Post-hoc:", style = "heading 2") %>%
               officer::body_add_table(test_results$posthoc, style = "Table Grid")
           }
           
+          # Footer
+          doc <- doc %>%
+            officer::body_add_par(" ") %>%
+            officer::body_add_par("---") %>%
+            officer::body_add_par("Laporan dibuat secara otomatis oleh sistem analisis statistik") %>%
+            officer::body_add_par(paste("Generated on:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+          
           print(doc, target = file)
-        }
+          show_notification("Laporan Word berhasil dibuat!", type = "success") # Menggunakan show_notification
+        }, error = function(e) {
+          show_notification(paste("Error saat membuat laporan Word:", e$message), type = "error") # Menggunakan show_notification
+        })
       }
     )
   })
