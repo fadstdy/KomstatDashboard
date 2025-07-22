@@ -122,10 +122,7 @@ manajemenDataUI <- function(id) {
                tabPanel("Visualisasi",
                         br(),
                         withSpinner(plotOutput(ns("after_plot")))),
-               
-               tabPanel("Tabel Kontingensi",
-                        br(),
-                        withSpinner(DT::dataTableOutput(ns("contingency_table")))), 
+              
                
                tabPanel("Data Preview",
                         br(),
@@ -412,50 +409,6 @@ manajemenDataServer <- function(id, values) {
       }
     })
     
-    # Tampilkan Tabel Kontingensi
-    output$contingency_table <- DT::renderDataTable({ 
-      req(transformation_results$after_data)
-      req(input$select_variable)
-      
-      if (input$transformation_type %in% c("manual", "auto")) {
-        cat_var <- paste0(input$select_variable, "_CAT")
-        if (cat_var %in% names(transformation_results$after_data)) {
-          categorical_vars_in_data <- get_categorical_vars(transformation_results$after_data)
-          
-          other_vars_candidates <- categorical_vars_in_data[categorical_vars_in_data != cat_var]
-          
-          other_vars_candidates <- other_vars_candidates[!(other_vars_candidates %in% c("DISTRICTCODE", "PROVINCE_NAME", "CITY_NAME"))]
-          
-          if (length(other_vars_candidates) > 0) {
-            other_var_to_use <- other_vars_candidates[1] 
-            
-            cont_table <- table(transformation_results$after_data[[cat_var]], 
-                                transformation_results$after_data[[other_var_to_use]])
-            
-            cont_df <- as.data.frame.matrix(addmargins(cont_table))
-            
-            DT::datatable(
-              cont_df,
-              options = list(
-                scrollX = TRUE, 
-                pageLength = 10,
-                lengthMenu = c(10, 25, 50),
-                dom = 'Bfrtip', 
-                buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-              ),
-              class = 'cell-border stripe',
-              rownames = TRUE 
-            )
-          } else {
-            return(data.frame(Info = "Tidak ada variabel kategorikal lain yang cocok untuk membuat tabel kontingensi. Pastikan ada setidaknya dua variabel kategorikal di dataset."))
-          }
-        } else {
-          return(data.frame(Info = "Variabel yang ditransformasi bukan kategorikal atau belum ditemukan."))
-        }
-      }
-      return(data.frame(Info = "Tabel kontingensi hanya tersedia untuk variabel kategorikal yang baru dibuat."))
-    }) 
-    
     # Tampilkan Preview Data
     output$data_preview <- DT::renderDataTable({
       req(transformation_results$after_data)
@@ -481,100 +434,65 @@ manajemenDataServer <- function(id, values) {
       
       if (info$type == "Kategorisasi Manual") {
         interpretation <- paste(
-          "INTERPRETASI KATEGORISASI MANUAL:\n",
-          "=====================================\n\n",
+          "INTERPRETASI KATEGORISASI MANUAL:\n\n",
           "Variabel", input$select_variable, "telah dikategorikan secara manual dengan:\n",
           "- Titik potong:", paste(info$breaks, collapse = ", "), "\n",
           "- Label kategori:", paste(info$labels, collapse = ", "), "\n\n",
-          "Kategorisasi ini memungkinkan analisis yang lebih fokus pada kelompok-kelompok tertentu",
+          "Kategorisasi ini digunakan untuk analisis pada kelompok-kelompok tertentu",
           "berdasarkan rentang nilai yang telah ditentukan.\n\n",
-          "Keuntungan:\n",
-          "- Kontrol penuh terhadap pembagian kategori\n",
-          "- Sesuai dengan pengetahuan domain\n",
-          "- Interpretasi yang lebih mudah\n\n",
-          "Saran Analisis Lanjutan:\n",
+          "Analisis Lanjutan:\n",
           "- Uji chi-square untuk asosiasi antar kategori\n",
           "- Analisis deskriptif per kategori\n",
           "- Visualisasi distribusi kategori"
         )
       } else if (grepl("Kategorisasi Otomatis", info$type)) {
         interpretation <- paste(
-          "INTERPRETASI KATEGORISASI OTOMATIS:\n",
-          "===================================\n\n",
+          "INTERPRETASI KATEGORISASI OTOMATIS:\n\n",
           "Variabel", input$select_variable, "telah dikategorikan secara otomatis dengan:\n",
           "- Metode:", info$type, "\n",
           "- Jumlah kategori:", info$n_categories, "\n",
           "- Titik potong:", paste(round(info$breaks, 3), collapse = ", "), "\n\n",
           "Metode ini memberikan pembagian yang objektif berdasarkan distribusi data.\n\n",
-          "Karakteristik:\n",
-          "- Pembagian berdasarkan distribusi empiris\n",
-          "- Setiap kategori memiliki proporsi yang relatif seimbang\n",
-          "- Mengurangi bias subjektif\n\n",
-          "Saran Analisis Lanjutan:\n",
-          "- Validasi kategori dengan pengetahuan domain\n",
+          "Analisis Lanjutan:\n",
+          "- Validasi hasil kategori dengan pengetahuan\n",
           "- Analisis perbedaan antar kategori\n",
-          "- Uji statistik untuk validasi pembagian"
+          "- Uji statistik untuk validasi pembagian kategori"
         )
       } else if (info$type == "Transformasi Logaritma") {
         interpretation <- paste(
           "INTERPRETASI TRANSFORMASI LOGARITMA:\n",
-          "====================================\n\n",
-          "Variabel", input$select_variable, "telah ditransformasi menggunakan logaritma natural.\n",
           "Variabel baru:", info$new_variable, "\n\n",
-          "Tujuan transformasi:\n",
-          "- Mengurangi *skewness* (kemencengan) data\n",
-          "- Stabilisasi varians\n",
-          "- Menormalkan distribusi\n",
-          "- Mengurangi pengaruh *outlier*\n\n",
-          "Kapan digunakan:\n",
-          "- Data dengan distribusi *right-skewed*\n",
-          "- Data dengan rentang yang sangat lebar\n",
-          "- Persiapan untuk analisis yang mengasumsikan normalitas\n\n",
-          "Catatan penting:\n",
-          "- Interpretasi berubah menjadi dalam skala logaritma\n",
-          "- Nilai 0 atau negatif memerlukan penyesuaian\n",
-          "- Transformasi balik diperlukan untuk interpretasi asli"
+          "Setelah dilakukan transformasi logaritma pada variabel", input$select_variable, ", distribusi data menjadi lebih normal.\n",
+          "Hal ini terlihat dari penyebaran data yang lebih simetris dan varians yang lebih seragam dibanding sebelum transformasi.\n",
+          "Transformasi ini juga membantu mengurangi pengaruh nilai ekstrem atau outlier sehingga model analisis menjadi lebih akurat.\n",
+          "Namun, karena data telah diubah ke skala logaritma maka setiap perubahan satu unit pada variabel logaritmik mencerminkan\n",
+          "perubahan relatif (persentase) pada skala aslinya."
         )
       } else if (info$type == "Transformasi Akar Kuadrat") {
         interpretation <- paste(
           "INTERPRETASI TRANSFORMASI AKAR KUADRAT:\n",
-          "======================================\n\n",
-          "Variabel", input$select_variable, "telah ditransformasi menggunakan akar kuadrat.\n",
           "Variabel baru:", info$new_variable, "\n\n",
-          "Tujuan transformasi:\n",
-          "- Mengurangi *skewness* ringan sampai sedang\n",
-          "- Stabilisasi varians (terutama untuk data *count*)\n",
-          "- Menormalkan distribusi\n",
-          "- Alternatif yang lebih ringan dibanding log\n\n",
-          "Kapan digunakan:\n",
-          "- Data *count* atau frekuensi\n",
-          "- Distribusi Poisson\n",
-          "- Data dengan varians proporsional terhadap *mean*\n\n",
-          "Keuntungan:\n",
-          "- Lebih mudah diinterpretasi dibanding log\n",
-          "- Cocok untuk data non-negatif\n",
-          "- Transformasi yang relatif lembut"
+          "Variabel", input$select_variable, "telah ditransformasi menggunakan akar kuadrat.\n",
+          "Transformasi digunakan untuk mengurangi kemencengan (skewness) pada distribusi data.\n",
+          "Selain itu, digunakan untuk mengurangi perbedaan varians dan mendekatkan bentuk ke distribusi normal.\n",
+          "Dibandingkan dengan transformasi logaritma, pendekatan ini lebih mudah diinterpretasikan karena berlaku untuk nilai non-negatif"
         )
       } else if (info$type == "Standardisasi (Z-score)") {
         interpretation <- paste(
           "INTERPRETASI STANDARDISASI Z-SCORE:\n",
-          "==================================\n\n",
-          "Variabel", input$select_variable, "telah distandarisasi menjadi z-score.\n",
           "Variabel baru:", info$new_variable, "\n\n",
+          "Variabel", input$select_variable, "telah distandarisasi menggunakan z-score.\n",
           "Karakteristik hasil:\n",
-          "- *Mean* = 0\n",
-          "- *Standard deviation* = 1\n",
+          "- Mean = 0\n",
+          "- Standar deviasi = 1\n",
           "- Skala yang seragam\n\n",
-          "Tujuan standardisasi:\n",
-          "- Membuat variabel setara (*comparable*)\n",
-          "- Persiapan untuk analisis multivariat\n",
-          "- Identifikasi *outlier* ($|z| > 3$)\n",
-          "- Interpretasi dalam unit *standard deviation*\n\n",
+          "Tujuan standardisasi adalah untuk menyamakan skala antar variabel, terutama saat digunakan dalam analisis multivariat\n",
+          "seperti regresi berganda.\n",
           "Interpretasi z-score:\n",
           "- z = 0: nilai sama dengan rata-rata\n",
           "- z = 1: nilai 1 SD di atas rata-rata\n",
           "- z = -1: nilai 1 SD di bawah rata-rata\n",
-          "- $|z| > 2$: nilai ekstrem (*outlier* potensial)"
+          "- $|z| > 2$: nilai ekstrem (outlier)"
         )
       }
       

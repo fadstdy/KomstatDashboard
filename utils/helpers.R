@@ -352,15 +352,14 @@ interpret_regression_summary <- function(summary_obj) {
   coefficients <- summary_obj$coefficients
   
   interpretation <- paste(
-    "INTERPRETASI HASIL REGRESI LINEAR BERGANDA:\n",
-    "==========================================\n\n",
-    "1. GOODNESS OF FIT:\n",
+    "INTERPRETASI HASIL REGRESI LINEAR:\n\n",
+    "Kebaikan Model:\n",
     "- R-squared:", round(r_squared, 4), 
     paste0("(", round(r_squared * 100, 2), "% variabilitas dijelaskan model)\n"),
     "- Adjusted R-squared:", round(adj_r_squared, 4), "\n",
     "- Interpretasi:", interpret_r_squared(r_squared), "\n\n",
     
-    "2. UJI SIGNIFIKANSI MODEL KESELURUHAN (F-test):\n",
+    "Uji Signifikansi Model Keseluruhan (F-test):\n",
     "- F-statistik:", round(f_statistic, 4), "\n",
     "- p-value:", format_p_value(f_p_value), "\n",
     "- Kesimpulan:", 
@@ -370,7 +369,7 @@ interpret_regression_summary <- function(summary_obj) {
       "Model secara keseluruhan tidak signifikan (p >= 0.05)"
     }, "\n\n",
     
-    "3. UJI SIGNIFIKANSI KOEFISIEN INDIVIDUAL:\n"
+    "Uji Signifikansi Parsial:\n"
   )
   
   # Interpretasi koefisien individual
@@ -394,23 +393,123 @@ interpret_regression_summary <- function(summary_obj) {
                               paste("Nilai prediksi ketika semua variabel independen = 0")
                             } else {
                               paste("Setiap peningkatan 1 unit", var_name, 
-                                    ifelse(coef_value > 0, "meningkatkan", "menurunkan"),
+                                    ifelse(coef_value > 0, "akan meningkatkan", "akan menurunkan"),
                                     "variabel dependen sebesar", abs(round(coef_value, 4)), "unit")
                             }, "\n\n"
     )
   }
+  return(interpretation)
+}
+
+# Helper function untuk interpretasi asumsi
+create_assumption_interpretation <- function(shapiro_test, vif_results, bp_test, dw_test = NULL) {
+  interpretation <- "Interpretasi Uji Asumsi Regresi Linear:\n\n"
   
+  # 1. Normalitas Residual
+  interpretation <- paste(interpretation, "Normalitas Residual:\n")
+  if (is.character(shapiro_test)) {
+    interpretation <- paste(interpretation, shapiro_test, "\n")
+  } else if (!is.null(shapiro_test)) {
+    shapiro_p_value <- shapiro_test$p.value
+    interpretation <- paste(interpretation,
+                            "- Uji Shapiro-Wilk: W =", round(shapiro_test$statistic, 4),
+                            ", p-value =", format_p_value(shapiro_p_value), "\n",
+                            "- Kesimpulan:",
+                            if (shapiro_p_value < 0.05) {
+                              "Residual tidak berdistribusi normal (p < 0.05)"
+                            } else {
+                              "Residual berdistribusi normal (p >= 0.05)"
+                            }, "\n",
+                            "- Rekomendasi:",
+                            if (shapiro_p_value < 0.05) {
+                              "Transformasi variabel (logaritma, akar kuadrat)."
+                            } else {
+                              "Asumsi normalitas terpenuhi. Interval kepercayaan dan uji hipotesis valid."
+                            }, "\n\n"
+    )
+  }
+  
+  # 2. Multikolinearitas
+  interpretation <- paste(interpretation, "Multikolinearitas (VIF):\n")
+  if (is.data.frame(vif_results) && "VIF" %in% names(vif_results)) {
+    max_vif <- max(vif_results$VIF, na.rm = TRUE)
+    interpretation <- paste(interpretation,
+                            "- VIF maksimum =", round(max_vif, 2), "\n",
+                            "- Status multikolinearitas:",
+                            if (max_vif >= 10) {
+                              "TINGGI (VIF >= 10) - Ada masalah multikolinearitas"
+                            } else {
+                              "RENDAH (VIF < 10) - Tidak ada masalah multikolinearitas"
+                            }, "\n",
+                            "- Rekomendasi:",
+                            if (max_vif >= 10) {
+                              "Hapus salah satu variabel berkorelasi tinggi"
+                            } else {
+                              "Asumsi tidak ada multikolinearitas terpenuhi."
+                            }, "\n\n"
+    )
+  } else {
+    interpretation <- paste(interpretation, "- ", vif_results, "\n\n")
+  }
+  
+  # 3. Heteroskedastisitas (Breusch-Pagan Test only)
+  interpretation <- paste(interpretation, "Homoskedastisitas (Varians Konstan):\n")
+  
+  if (is.character(bp_test)) {
+    interpretation <- paste(interpretation, "- Uji Breusch-Pagan: ", bp_test, "\n")
+  } else if (!is.null(bp_test) && "p.value" %in% names(bp_test)) {
+    bp_p_value <- bp_test$p.value
+    interpretation <- paste(interpretation,
+                            "- Uji Breusch-Pagan: BP =", round(bp_test$statistic, 4),
+                            ", p-value =", format_p_value(bp_p_value), "\n",
+                            "- Kesimpulan:",
+                            if (bp_p_value < 0.05) {
+                              "Ada heteroskedastisitas (p < 0.05)"
+                            } else {
+                              "Homoskedastisitas terpenuhi (p >= 0.05)"
+                            }, "\n"
+    )
+  }
+  
+  # Rekomendasi untuk heteroskedastisitas
   interpretation <- paste(interpretation,
-                          "4. REKOMENDASI:\n",
-                          if (r_squared < 0.3) {
-                            "- Model memiliki daya prediksi rendah. Pertimbangkan menambah variabel atau transformasi.\n"
-                          } else if (r_squared > 0.8) {
-                            "- Model memiliki daya prediksi tinggi. Periksa kemungkinan overfitting.\n"
-                          } else {
-                            "- Model memiliki daya prediksi yang wajar.\n"
-                          },
-                          "- Periksa asumsi regresi (normalitas residual, multikolinearitas, heteroskedastisitas).\n",
-                          "- Lakukan validasi model dengan data terpisah jika memungkinkan.\n"
+                          "- Rekomendasi:\n",
+                          "  Jika ada heteroskedastisitas, pertimbangkan:\n",
+                          "  Transformasi variabel (log, akar kuadrat)\n\n"
+  )
+  
+  # 4. Autokorelasi (Durbin-Watson Test)
+  interpretation <- paste(interpretation, "Autokorelasi (Uji Durbin-Watson):\n")
+  if (is.character(dw_test)) {
+    interpretation <- paste(interpretation, "- Uji Durbin-Watson: ", dw_test, "\n\n")
+  } else if (!is.null(dw_test) && "p.value" %in% names(dw_test)) {
+    dw_statistic <- dw_test$statistic
+    dw_p_value <- dw_test$p.value
+    interpretation <- paste(interpretation,
+                            "- Durbin-Watson statistik (DW) =", round(dw_statistic, 4), "\n",
+                            "- p-value =", format_p_value(dw_p_value), "\n",
+                            "- Kesimpulan:",
+                            if (dw_p_value < 0.05) {
+                              "Ada autokorelasi (p < 0.05)."
+                            } else {
+                              "Tidak ada autokorelasi (p >= 0.05)."
+                            }, "\n",
+                            "- Rekomendasi:",
+                            if (dw_p_value < 0.05) {
+                              "Pertimbangkan menggunakan metode estimasi yang memperhitungkan autokorelasi (Cochrane-Orcutt, First-Difference)."
+                            } else {
+                              "Asumsi tidak ada autokorelasi terpenuhi."
+                            }, "\n\n"
+    )
+  }
+  
+  # 5. Kesimpulan Umum
+  interpretation <- paste(interpretation,
+                          "Kesimpulan Validitas Model:\n",
+                          "- Periksa semua asumsi di atas sebelum menginterpretasi hasil.\n",
+                          "- Jika asumsi dilanggar, hasil inferensi (p-value, interval kepercayaan) mungkin tidak valid.\n",
+                          "- Untuk prediksi, model masih bisa berguna meski asumsi tidak sepenuhnya terpenuhi.\n",
+                          "- Gunakan plot diagnostik untuk validasi visual tambahan."
   )
   
   return(interpretation)

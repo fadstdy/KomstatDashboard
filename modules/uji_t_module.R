@@ -1,10 +1,7 @@
 # Uji t Module
 # modules/uji_t_module.R
 
-# ==========================================
 # UJI t - UI FUNCTION
-# ==========================================
-
 ujiTUI <- function(id) {
   ns <- NS(id)
   
@@ -12,7 +9,7 @@ ujiTUI <- function(id) {
     # Panel Kontrol
     column(4,
            box(
-             title = "🧮 Panel Kontrol Uji t",
+             title = "Panel Kontrol Uji t",
              status = "info",
              solidHeader = TRUE,
              width = 12,
@@ -61,18 +58,34 @@ ujiTUI <- function(id) {
                           "Tingkat Signifikansi:",
                           value = 0.05, min = 0.01, max = 0.1, step = 0.01),
              
+             # Tombol Aksi
              br(),
-             actionButton(ns("run_test"), 
-                          "Jalankan Uji t", 
-                          class = "btn-info btn-lg"),
              
-             hr(),
-             h5("📥 Download:"),
-             downloadButton(ns("download_results"), "Hasil", class = "btn-sm btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_plot"), "Plot", class = "btn-sm btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_report"), "Laporan", class = "btn-sm btn-info")
+             div(style = "width: 90%;",
+                 actionButton(ns("run_test"),
+                              "Jalankan Uji t",
+                              class = "btn-success",
+                              style = "width: 90%; margin-bottom: 10px;") # Lebar 90%
+             ),
+             br(),
+             # Perbaikan: Tambahkan div untuk mengatur lebar dan perataan tombol download
+             h5("Download Hasil:"),
+             div(style = "width: 90%;",
+                 downloadButton(ns("download_results"),
+                                "Download Hasil Uji",
+                                class = "btn-primary",
+                                style = "width: 90%; margin-bottom: 5px;"), # Lebar 90%
+                 br(),
+                 downloadButton(ns("download_plot"),
+                                "Download Plot Asumsi",
+                                class = "btn-primary",
+                                style = "width: 90%; margin-bottom: 5px;"), # Lebar 90%
+                 br(),
+                 downloadButton(ns("download_report"),
+                                "Download Laporan",
+                                class = "btn-info",
+                                style = "width: 90%;") # Lebar 90%
+             )
            )
     ),
     
@@ -109,10 +122,7 @@ ujiTUI <- function(id) {
   )
 }
 
-# ==========================================
 # UJI t - SERVER FUNCTION
-# ==========================================
-
 ujiTServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
     
@@ -204,13 +214,11 @@ ujiTServer <- function(id, values) {
         
         # Interpretasi
         test_results$interpretation <- paste(
-          "INTERPRETASI UJI t SATU SAMPEL:\n",
-          "===============================\n\n",
+          "INTERPRETASI UJI t SATU SAMPEL:\n\n",
           "VARIABEL YANG DIUJI:\n",
           "- Variabel:", input$variable, "\n",
           "- Jumlah observasi:", length(variable_clean), "\n",
-          "- Rata-rata sampel:", round(test_result$estimate, 4), "\n",
-          "- Nilai hipotesis (μ₀):", input$mu0, "\n\n",
+          "- Rata-rata sampel:", round(test_result$estimate, 4), "\n\n",
           "HIPOTESIS:\n",
           "- H₀: μ =", input$mu0, "\n",
           "- H₁: μ", switch(input$alternative, 
@@ -225,27 +233,24 @@ ujiTServer <- function(id, values) {
           paste(round(test_result$conf.int, 3), collapse = ", "), "]\n\n",
           "KESIMPULAN (α =", input$alpha, "):\n",
           if (test_result$p.value < input$alpha) {
-            paste("TOLAK H₀. Ada bukti statistik yang signifikan bahwa rata-rata populasi",
+            paste("TOLAK H₀.Terdapat cukup bukti untuk menyatakan bahwa rata-rata populasi",
                   switch(input$alternative,
                          "two.sided" = "berbeda dari",
                          "greater" = "lebih besar dari", 
                          "less" = "lebih kecil dari"), input$mu0, 
                   "(p-value =", format_p_value(test_result$p.value), "< α =", input$alpha, ")")
           } else {
-            paste("GAGAL TOLAK H₀. Tidak ada bukti statistik yang cukup bahwa rata-rata populasi",
+            paste("GAGAL TOLAK H₀. Tidak cukup bukti untuk menyatakan bahwa rata-rata populasi",
                   switch(input$alternative,
                          "two.sided" = "berbeda dari",
                          "greater" = "lebih besar dari",
                          "less" = "lebih kecil dari"), input$mu0,
                   "(p-value =", format_p_value(test_result$p.value), ">= α =", input$alpha, ")")
-          }, "\n\n",
-          "INTERPRETASI PRAKTIS:\n",
+          }, "\n",
           if (test_result$p.value < input$alpha) {
-            paste("Rata-rata", input$variable, "dalam sampel berbeda secara signifikan dari nilai hipotesis", input$mu0, ".",
-                  "Perbedaan ini tidak disebabkan oleh kebetulan sampling.")
+            paste("Rata-rata", input$variable, "dalam sampel berbeda secara signifikan dari nilai hipotesis", input$mu0, ".")
           } else {
-            paste("Rata-rata", input$variable, "dalam sampel tidak berbeda secara signifikan dari nilai hipotesis", input$mu0, ".",
-                  "Perbedaan yang diamati bisa saja disebabkan oleh variasi sampling alami.")
+            paste("Rata-rata", input$variable, "dalam sampel tidak berbeda secara signifikan dari nilai hipotesis", input$mu0, ".")
           }
         )
         
@@ -306,8 +311,7 @@ ujiTServer <- function(id, values) {
         group_sizes <- table(complete_data[[input$group_variable]])
         
         test_results$interpretation <- paste(
-          "INTERPRETASI UJI t DUA SAMPEL (STUDENT'S T-TEST):\n", # Judul interpretasi diubah
-          "===============================================\n\n",
+          "INTERPRETASI UJI t DUA SAMPEL (STUDENT'S T-TEST):\n\n", 
           "KELOMPOK YANG DIBANDINGKAN:\n",
           "- Kelompok 1:", group_names[1], "\n",
           "  * Ukuran sampel (n₁) =", group_sizes[1], "\n",
@@ -339,8 +343,7 @@ ujiTServer <- function(id, values) {
             paste("GAGAL TOLAK H₀. Tidak ada perbedaan yang signifikan antara rata-rata", 
                   group_names[1], "dan", group_names[2],
                   "(p-value =", format_p_value(test_result$p.value), ">= α =", input$alpha, ")")
-          }, "\n\n",
-          "INTERPRETASI PRAKTIS:\n",
+          }, "\n",
           if (test_result$p.value < input$alpha) {
             paste("Kelompok", group_names[1], "memiliki rata-rata", input$variable, 
                   "yang berbeda secara signifikan dibandingkan kelompok", group_names[2], ".",

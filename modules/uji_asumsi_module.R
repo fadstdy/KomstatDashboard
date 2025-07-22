@@ -1,4 +1,4 @@
-# Uji Asumsi Module - IMPROVED VERSION
+# Uji Asumsi Module 
 # modules/uji_asumsi_module.R
 
 # UI function for Uji Asumsi
@@ -15,7 +15,7 @@ ujiAsumsiUI <- function(id) {
              width = 12,
              
              # Pemilihan Tipe Uji
-             selectInput(ns("test_type"), 
+             selectInput(ns("test_type"),
                          "Pilih Jenis Uji:",
                          choices = list(
                            "Uji Normalitas" = "normality",
@@ -23,7 +23,7 @@ ujiAsumsiUI <- function(id) {
                          )),
              
              # Pemilihan Variabel Uji
-             selectInput(ns("test_variable"), 
+             selectInput(ns("test_variable"),
                          "Variabel Uji:",
                          choices = NULL),
              
@@ -31,52 +31,59 @@ ujiAsumsiUI <- function(id) {
              conditionalPanel(
                condition = "input.test_type == 'homogeneity'",
                ns = ns,
-               selectInput(ns("group_variable_homogeneity"), 
+               selectInput(ns("group_variable_homogeneity"),
                            "Variabel Pengelompokan:",
                            choices = NULL),
-              
                
                # TAMBAHAN: Checkbox untuk filter kelompok
                conditionalPanel(
                  condition = "output.show_group_filter == true",
                  ns = ns,
-                 checkboxInput(ns("filter_small_groups"), 
-                               "Filter kelompok dengan data < 3", 
+                 checkboxInput(ns("filter_small_groups"),
+                               "Filter kelompok dengan data < 3",
                                value = TRUE),
-                 numericInput(ns("min_group_size"), 
-                              "Minimal data per kelompok:", 
+                 numericInput(ns("min_group_size"),
+                              "Minimal data per kelompok:",
                               value = 3, min = 2, max = 10)
                )
              ),
              
              # Tingkat Signifikansi
-             numericInput(ns("alpha_level"), 
+             numericInput(ns("alpha_level"),
                           "Tingkat Signifikansi (α):",
-                          value = 0.05, 
-                          min = 0.01, 
-                          max = 0.1, 
+                          value = 0.05,
+                          min = 0.01,
+                          max = 0.1,
                           step = 0.01),
              
              # Tombol Aksi
              br(),
-             actionButton(ns("run_assumption_test"), 
-                          "Jalankan Uji Asumsi", 
-                          class = "btn-success"),
-             br(), br(),
-             
-             # Opsi Download
+             # Perbaikan: Tambahkan div untuk mengatur lebar dan perataan tombol
+             div(style = "width: 90%;",
+                 actionButton(ns("run_assumption_test"),
+                              "Jalankan Uji Asumsi",
+                              class = "btn-success",
+                              style = "width: 90%; margin-bottom: 10px;") # Lebar 90%
+             ),
+             br(),
+             # Perbaikan: Tambahkan div untuk mengatur lebar dan perataan tombol download
              h5("Download Hasil:"),
-             downloadButton(ns("download_test_results"), 
-                            "Download Hasil Uji", 
-                            class = "btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_plot_assumption"), 
-                            "Download Plot Asumsi", 
-                            class = "btn-primary"),
-             br(), br(),
-             downloadButton(ns("download_report_assumption"), 
-                            "Download Laporan", 
-                            class = "btn-info")
+             div(style = "width: 90%;",
+                 downloadButton(ns("download_test_results"),
+                                "Download Hasil Uji",
+                                class = "btn-primary",
+                                style = "width: 90%; margin-bottom: 5px;"), # Lebar 90%
+                 br(),
+                 downloadButton(ns("download_plot_assumption"),
+                                "Download Plot Asumsi",
+                                class = "btn-primary",
+                                style = "width: 90%; margin-bottom: 5px;"), # Lebar 90%
+                 br(),
+                 downloadButton(ns("download_report_assumption"),
+                                "Download Laporan",
+                                class = "btn-info",
+                                style = "width: 90%;") # Lebar 90%
+             )
            )
     ),
     
@@ -159,7 +166,7 @@ ujiAsumsiServer <- function(id, values) {
       numeric_vars <- get_numeric_vars(values$current_data)
       valid_grouping_vars <- get_valid_grouping_vars(values$current_data)
       
-      updateSelectInput(session, "test_variable", 
+      updateSelectInput(session, "test_variable",
                         choices = setNames(numeric_vars, numeric_vars))
       
       # PERBAIKAN: Hanya tampilkan variabel pengelompokan yang valid
@@ -170,11 +177,11 @@ ujiAsumsiServer <- function(id, values) {
           paste0(var, " (", n_groups, " kelompok)")
         })
         
-        updateSelectInput(session, "group_variable_homogeneity", 
-                          choices = setNames(c("", valid_grouping_vars), 
+        updateSelectInput(session, "group_variable_homogeneity",
+                          choices = setNames(c("", valid_grouping_vars),
                                              c("-- Pilih Variabel --", var_labels)))
       } else {
-        updateSelectInput(session, "group_variable_homogeneity", 
+        updateSelectInput(session, "group_variable_homogeneity",
                           choices = list("-- Tidak ada variabel pengelompokan yang valid --" = ""))
       }
     })
@@ -212,7 +219,7 @@ ujiAsumsiServer <- function(id, values) {
         # Hapus NA dan periksa ukuran data untuk Shapiro-Wilk (min 3 data unik)
         variable_to_test <- na.omit(variable_to_test)
         if (length(variable_to_test) < 3 || length(unique(variable_to_test)) < 3) {
-          showNotification("Data tidak cukup atau tidak bervariasi untuk Uji Shapiro-Wilk (min. 3 nilai unik).", type = "warning")
+          show_notification("Data tidak cukup atau tidak bervariasi untuk Uji Shapiro-Wilk (min. 3 nilai unik).", type = "warning")
           assumption_results$test_output <- "Data tidak cukup untuk Uji Shapiro-Wilk."
           assumption_results$test_plot <- NULL
           assumption_results$interpretation <- "Tidak dapat menjalankan uji normalitas karena data tidak memenuhi persyaratan."
@@ -232,8 +239,7 @@ ujiAsumsiServer <- function(id, values) {
           theme_custom()
         
         assumption_results$interpretation <- paste(
-          "INTERPRETASI UJI NORMALITAS (SHAPIRO-WILK):\n",
-          "=========================================\n\n",
+          "INTERPRETASI UJI NORMALITAS (SHAPIRO-WILK):\n\n",
           "Hipotesis:\n",
           "H0: Data terdistribusi normal\n",
           "H1: Data tidak terdistribusi normal\n\n",
@@ -249,7 +255,7 @@ ujiAsumsiServer <- function(id, values) {
         req(input$group_variable_homogeneity)
         
         if (input$group_variable_homogeneity == "") {
-          showNotification("Silakan pilih variabel pengelompokan untuk uji homogenitas.", type = "warning")
+          show_notification("Silakan pilih variabel pengelompokan untuk uji homogenitas.", type = "warning")
           return()
         }
         
@@ -261,7 +267,7 @@ ujiAsumsiServer <- function(id, values) {
         complete_data <- na.omit(complete_data)
         
         if (nrow(complete_data) == 0) {
-          showNotification("Tidak ada data lengkap untuk uji homogenitas.", type = "warning")
+          show_notification("Tidak ada data lengkap untuk uji homogenitas.", type = "warning")
           assumption_results$test_output <- "Tidak ada data lengkap untuk uji homogenitas."
           assumption_results$test_plot <- NULL
           assumption_results$interpretation <- "Tidak dapat menjalankan uji homogenitas karena tidak ada data lengkap."
@@ -278,18 +284,18 @@ ujiAsumsiServer <- function(id, values) {
           complete_data$Group <- droplevels(complete_data$Group)
           
           n_removed <- length(group_counts) - length(valid_groups)
-          showNotification(paste("Kelompok dengan data <", input$min_group_size, "telah difilter.", n_removed, "kelompok dihapus."), type = "message")
+          show_notification(paste("Kelompok dengan data <", input$min_group_size, "telah difilter.", n_removed, "kelompok dihapus."), type = "message")
         }
         
         # Periksa ulang setelah filtering
         group_counts_final <- table(complete_data$Group)
         if (length(group_counts_final) < 2) {
-          showNotification("Setelah filtering, tidak tersisa cukup kelompok untuk uji homogenitas (minimal 2 kelompok).", type = "error")
+          show_notification("Setelah filtering, tidak tersisa cukup kelompok untuk uji homogenitas (minimal 2 kelompok).", type = "error")
           return()
         }
         
         if (any(group_counts_final < 2)) {
-          showNotification("Masih ada kelompok dengan data < 2. Uji homogenitas tidak dapat dilakukan.", type = "error")
+          show_notification("Masih ada kelompok dengan data < 2. Uji homogenitas tidak dapat dilakukan.", type = "error")
           return()
         }
         
@@ -308,8 +314,7 @@ ujiAsumsiServer <- function(id, values) {
             theme(axis.text.x = element_text(angle = 45, hjust = 1))
           
           assumption_results$interpretation <- paste(
-            "INTERPRETASI UJI HOMOGENITAS VARIANSI (LEVENES TEST):\n",
-            "=================================================\n\n",
+            "INTERPRETASI UJI HOMOGENITAS VARIANSI (LEVENES TEST):\n\n",
             "Variabel Pengelompokan:", input$group_variable_homogeneity, "\n",
             "Jumlah Kelompok yang Dianalisis:", length(group_counts_final), "\n",
             "Ukuran Kelompok: ", min(group_counts_final), "-", max(group_counts_final), " observasi\n\n",
@@ -352,35 +357,51 @@ ujiAsumsiServer <- function(id, values) {
       assumption_results$interpretation
     })
     
-    # Handler Download (sama seperti sebelumnya)
+    # Handler Download Hasil Uji
     output$download_test_results <- downloadHandler(
       filename = function() {
         paste("hasil_uji_asumsi_", input$test_type, "_", Sys.Date(), ".txt", sep = "")
       },
       content = function(file) {
-        if (!is.null(assumption_results$test_output)) {
+        tryCatch({ # <--- Tambahkan tryCatch
+          req(assumption_results$test_output)
           writeLines(capture.output(print(assumption_results$test_output)), file)
-        }
+          show_notification("Hasil uji berhasil diunduh!", type = "success")
+        }, error = function(e) {
+          show_notification(paste("Gagal mengunduh hasil uji:", e$message), type = "error")
+        })
       }
     )
     
+    # Handler Download Plot Asumsi
     output$download_plot_assumption <- downloadHandler(
       filename = function() {
         paste("plot_uji_asumsi_", input$test_type, "_", Sys.Date(), ".png", sep = "")
       },
       content = function(file) {
-        if (!is.null(assumption_results$test_plot)) {
+        tryCatch({ # <--- Tambahkan tryCatch
+          req(assumption_results$test_plot)
           ggsave(file, assumption_results$test_plot, width = 10, height = 6, dpi = 300)
-        }
+          show_notification("Plot asumsi berhasil diunduh!", type = "success")
+        }, error = function(e) {
+          show_notification(paste("Gagal mengunduh plot asumsi:", e$message), type = "error")
+        })
       }
     )
     
+    # Handler Download Laporan
     output$download_report_assumption <- downloadHandler(
       filename = function() {
         paste("laporan_uji_asumsi_", input$test_type, "_", Sys.Date(), ".docx", sep = "")
       },
       content = function(file) {
-        if (!is.null(assumption_results$interpretation)) {
+        tryCatch({ # <--- Tambahkan tryCatch untuk debug error pembuatan dokumen
+          req(assumption_results$test_output,
+              assumption_results$test_plot,
+              assumption_results$interpretation,
+              input$test_type,
+              input$test_variable)
+          
           doc <- officer::read_docx()
           
           doc <- doc %>%
@@ -392,7 +413,8 @@ ujiAsumsiServer <- function(id, values) {
             officer::body_add_par("Hasil Uji:", style = "heading 2")
           
           if (!is.null(assumption_results$test_output)) {
-            doc <- doc %>% officer::body_add_par(capture.output(print(assumption_results$test_output)))
+            # PERBAIKI INI: Gabungkan output print menjadi satu string
+            doc <- doc %>% officer::body_add_par(paste(capture.output(print(assumption_results$test_output)), collapse = "\n"))
           }
           
           doc <- doc %>%
@@ -412,7 +434,10 @@ ujiAsumsiServer <- function(id, values) {
             officer::body_add_par(assumption_results$interpretation)
           
           print(doc, target = file)
-        }
+          show_notification("Laporan Word berhasil dibuat!", type = "success") # Notifikasi sukses
+        }, error = function(e) {
+          show_notification(paste("Error saat membuat laporan Word:", e$message), type = "error")
+        })
       }
     )
   })

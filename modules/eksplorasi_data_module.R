@@ -155,17 +155,7 @@ eksplorasiDataUI <- function(id) {
                    )
                  ),
                  
-                 # Tab 4: Matriks Korelasi (hanya muncul jika ada >= 2 variabel numerik)
-                 conditionalPanel(
-                   condition = "output.show_correlation == true",
-                   ns = ns,
-                   tabPanel("Matriks Korelasi",
-                            br(),
-                            h4("Hubungan Antar Variabel Numerik"),
-                            withSpinner(plotOutput(ns("plot_correlation"), height = "500px"))
-                   )
-                 ),
-                 # Tab 5: Scatter Plot (BARU DITAMBAHKAN)
+                 # Tab 4: Scatter Plot (BARU DITAMBAHKAN)
                  conditionalPanel(
                    condition = "output.show_scatter_plot == true", 
                    ns = ns,
@@ -174,7 +164,19 @@ eksplorasiDataUI <- function(id) {
                             h4("Hubungan Antar Dua Variabel Numerik"),
                             withSpinner(plotlyOutput(ns("plot_scatter"), height = "500px")) 
                    )
+                 ),
+                 
+                 # Tab 5: Matriks Korelasi (hanya muncul jika ada >= 2 variabel numerik)
+                 conditionalPanel(
+                   condition = "output.show_correlation == true",
+                   ns = ns,
+                   tabPanel("Matriks Korelasi",
+                            br(),
+                            h4("Hubungan Antar Variabel Numerik"),
+                            withSpinner(plotOutput(ns("plot_correlation"), height = "500px"))
+                   )
                  )
+                 
                )
              )
            )
