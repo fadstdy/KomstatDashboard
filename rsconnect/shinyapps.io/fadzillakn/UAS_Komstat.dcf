@@ -1,0 +1,10 @@
+name: UAS_Komstat
+title:
+username: fadzillakn
+account: fadzillakn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15111110
+bundleId: 10658304
+url: https://fadzillakn.shinyapps.io/UAS_Komstat/
+version: 1

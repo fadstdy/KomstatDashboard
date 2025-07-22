@@ -1,12 +1,11 @@
-# Peta Module
 # modules/peta_module.R
 
-# UI function untuk Peta
+# UI function untuk Peta 
 petaUI <- function(id) {
   ns <- NS(id)
   
   fluidRow(
-    # Panel Kontrol Horizontal di Atas
+    # Panel Kontrol Horizontal di Atas 
     column(12,
            box(
              title = "🗺️ Panel Kontrol Peta",
@@ -15,8 +14,7 @@ petaUI <- function(id) {
              width = 12,
              
              fluidRow(
-               column(3,
-                      # Pemilihan Variabel untuk Visualisasi
+               column(4,
                       selectInput(ns("map_variable"), 
                                   "Pilih Variabel untuk Visualisasi:",
                                   choices = list("Memuat variabel..." = ""))
@@ -26,14 +24,13 @@ petaUI <- function(id) {
                                    "Jumlah Interval Warna:",
                                    value = 5, min = 3, max = 10, step = 1)
                ),
-               column(4,
+               column(3,
                       selectInput(ns("classification_method"), 
                                   "Metode Klasifikasi:",
                                   choices = list(
                                     "Quantile" = "quantile",
                                     "Equal Interval" = "equal",
-                                    "Natural Breaks (Jenks)" = "jenks",
-                                    "Standard Deviation" = "sd"
+                                    "Natural Breaks (Jenks)" = "jenks"
                                   ))
                ),
                column(2,
@@ -42,36 +39,82 @@ petaUI <- function(id) {
                                    "Buat Peta", 
                                    class = "btn-primary btn-block")
                )
+             ),
+             
+             # Info tambahan
+             div(
+               style = "margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;",
+               p(style = "margin: 0; color: #007bff; font-weight: bold;")
              )
            )
     ),
     
-    # Area Peta
-    column(12,
-           box(
-             title = "Peta Tematik Interaktif",
-             status = "success",
-             solidHeader = TRUE,
-             width = 12,
-             height = "650px",
-             withSpinner(plotlyOutput(ns("plotly_map"), height = "600px"))
-           )
+    # Layout dengan peta dan panel statistik 
+    fluidRow(
+      # Kolom peta (lebih besar dari sebelumnya)
+      column(
+        width = 8,
+        box(
+          title = "Peta Interaktif",
+          status = "success",
+          solidHeader = TRUE,
+          width = NULL,
+          height = "650px",
+          withSpinner(leafletOutput(ns("distribution_map"), height = "600px"))
+        )
+      ),
+      
+      # Kolom panel statistik detail 
+      column(
+        width = 4,
+        box(
+          title = "Statistik Detail Wilayah",
+          status = "info",
+          solidHeader = TRUE,
+          width = NULL,
+          height = "650px",
+          style = "overflow-y: auto;",
+          uiOutput(ns("district_info_panel"))
+        )
+      )
     ),
     
-    # Download di bawah peta
+    # Statistik Umum dan Interpretasi 
+    fluidRow(
+      column(4,
+             box(
+               title = "Statistik Spasial",
+               status = "warning",
+               solidHeader = TRUE,
+               width = NULL,
+               collapsible = TRUE,
+               withSpinner(tableOutput(ns("spatial_stats")))
+             )
+      ),
+      column(8,
+             box(
+               title = "Interpretasi Peta",
+               status = "warning", 
+               solidHeader = TRUE,
+               width = NULL,
+               collapsible = TRUE,
+               withSpinner(verbatimTextOutput(ns("map_interpretation")))
+             )
+      )
+    ),
+    
+    # Download section 
     column(12,
            box(
              title = "Download",
-             status = "info",
+             status = "primary",
              solidHeader = TRUE,
              width = 12,
              
-             # Info penjelasan download
              div(
                style = "background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;",
                h5("ℹ️ Penjelasan Download:", style = "margin: 0; color: #495057;"),
                tags$ul(
-                 tags$li("Peta (HTML): File interaktif yang bisa dibuka di browser dengan fitur zoom/pan"),
                  tags$li("Data Peta (CSV): Data numerik hasil join antara statistik dan geometri"),
                  tags$li("Interpretasi (TXT): Analisis statistik dan interpretasi pola spasial"),
                  style = "margin: 5px 0 0 0; color: #495057; font-size: 12px;"
@@ -79,419 +122,403 @@ petaUI <- function(id) {
              ),
              
              fluidRow(
-               column(4,
-                      downloadButton(ns("download_map"), 
-                                     "Download Peta (HTML)", 
-                                     class = "btn-success btn-block")
-               ),
-               column(4,
+               column(6,
                       downloadButton(ns("download_data"), 
                                      "Download Data (CSV)", 
                                      class = "btn-info btn-block")
                ),
-               column(4,
+               column(6,
                       downloadButton(ns("download_interpretation"), 
                                      "📝 Download Interpretasi (TXT)", 
                                      class = "btn-warning btn-block")
                )
              )
            )
-    ),
-    
-    # Statistik dan Interpretasi
-    column(12,
-           box(
-             title = "Statistik Spasial",
-             status = "warning",
-             solidHeader = TRUE,
-             width = 4,
-             collapsible = TRUE,
-             withSpinner(tableOutput(ns("spatial_stats")))
-           ),
-           
-           box(
-             title = "Interpretasi Peta",
-             status = "warning", 
-             solidHeader = TRUE,
-             width = 8,
-             collapsible = TRUE,
-             withSpinner(verbatimTextOutput(ns("map_interpretation")))
-           )
     )
   )
 }
 
-# Fungsi Server untuk Peta
+# Server function untuk Peta 
 petaServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
     
-    # Nilai reaktif untuk peta
+    # Reactive values untuk menyimpan data peta dan klik
     map_data <- reactiveValues(
       geojson = NULL,
       merged_data = NULL,
-      plotly_map = NULL,
       interpretation = NULL,
       geojson_loaded = FALSE
     )
     
-    # Load GeoJSON file otomatis saat startup
-    observe({
-      # Path file GeoJSON - disesuaikan dengan nama file yang ada
-      geojson_path <- "data/indonesia_kabkota2.geojson"
-      
-      # Cek apakah file ada
-      if (file.exists(geojson_path)) {
-        # Cek apakah sf package tersedia
-        if (!requireNamespace("sf", quietly = TRUE)) {
-          showNotification("Package 'sf' diperlukan untuk membaca GeoJSON. Install dengan: install.packages('sf')", 
-                           type = "error")
-          return()
-        }
-        
-        tryCatch({
-          # Baca GeoJSON
-          geojson_data <- sf::st_read(geojson_path, quiet = TRUE)
-          map_data$geojson <- geojson_data
-          map_data$geojson_loaded <- TRUE
-          
-          showNotification(paste("File GeoJSON berhasil dimuat -", nrow(geojson_data), "wilayah"), type = "message")
-          
-        }, error = function(e) {
-          showNotification(paste("Error membaca GeoJSON:", e$message), type = "error")
-          map_data$geojson_loaded <- FALSE
-        })
-      } else {
-        showNotification(paste("File GeoJSON tidak ditemukan di:", geojson_path, 
-                               "Silakan letakkan file 'indonesia_kabkota.geojson' di folder 'data/'"), 
-                         type = "warning")
-        map_data$geojson_loaded <- FALSE
-      }
-    })
+    # REACTIVE VALUES UNTUK MENYIMPAN DATA KLIK 
+    map_click_data <- reactiveValues(
+      selected_district = NULL,
+      district_data = NULL,
+      show_stats = FALSE
+    )
     
-    # Update pilihan variabel berdasarkan data yang tersedia
+    # Load GeoJSON file otomatis saat startup 
     observe({
-      # Pastikan ada data yang dimuat dari module lain (values$current_data)
-      if (!is.null(values$current_data) && nrow(values$current_data) > 0) {
-        
-        # Dapatkan kolom numerik yang bisa dipetakan (exclude DISTRICTCODE dan kolom non-numerik)
-        exclude_cols <- c("DISTRICTCODE", "DISTRICT", "PROVINCE", "REGION") # Kolom ID dan kategoris
-        
-        numeric_cols <- names(values$current_data)[sapply(values$current_data, is.numeric)]
-        available_variables <- setdiff(numeric_cols, exclude_cols)
-        
-        if (length(available_variables) > 0) {
-          # Buat choices dengan nama yang lebih deskriptif
-          choices_list <- setNames(available_variables, available_variables)
-          
-          # Update pilihan di selectInput
-          updateSelectInput(session, "map_variable",
-                            choices = choices_list,
-                            selected = available_variables[1])
-        } else {
-          # Jika tidak ada variabel numerik
-          updateSelectInput(session, "map_variable",
-                            choices = list("Tidak ada variabel numerik" = ""),
-                            selected = "")
-          
-          showNotification("Tidak ada variabel numerik yang dapat dipetakan", type = "warning")
-        }
-      } else {
-        # Jika belum ada data
-        updateSelectInput(session, "map_variable",
-                          choices = list("Belum ada data dimuat..." = ""),
-                          selected = "")
-      }
-    })
-    
-    # Observer untuk monitoring data changes
-    observe({
-      if (!is.null(values$current_data)) {
-        # Cek apakah ada DISTRICTCODE untuk join
-        if (!"DISTRICTCODE" %in% names(values$current_data)) {
-          showNotification("DISTRICTCODE tidak ditemukan dalam data. Pastikan kolom ini ada untuk join dengan peta.", 
-                           type = "warning")
-        }
-      }
-    })
-    
-    # Generate peta
-    observeEvent(input$generate_map, {
-      req(map_data$geojson)
-      req(input$map_variable)
-      req(input$map_variable != "") # Pastikan bukan pilihan kosong
+      geojson_path <- "Administrasi_Kabupaten_ind.geojson" 
       
-      if (!map_data$geojson_loaded) {
-        showNotification("File GeoJSON belum dimuat. Pastikan file ada di folder data/", type = "error")
-        return()
-      }
-      
-      if (is.null(values$current_data) || nrow(values$current_data) == 0) {
-        showNotification("Data belum dimuat. Silakan muat data terlebih dahulu.", type = "error")
-        return()
-      }
-      
-      # Cek apakah variabel yang dipilih ada dalam data
-      if (!input$map_variable %in% names(values$current_data)) {
-        showNotification(paste("Variabel", input$map_variable, "tidak ditemukan dalam data"), type = "error")
-        return()
-      }
-      
-      # Cek apakah packages yang diperlukan tersedia
-      required_packages <- c("sf", "ggplot2", "dplyr", "plotly")
-      
-      missing_packages <- required_packages[!sapply(required_packages, requireNamespace, quietly = TRUE)]
-      
-      if (length(missing_packages) > 0) {
-        showNotification(paste("Packages berikut diperlukan:", paste(missing_packages, collapse = ", ")), 
-                         type = "error")
+      if (!file.exists(geojson_path)) {
+        showNotification(
+          paste("KRITIS: File peta tidak ditemukan:", geojson_path),
+          type = "error", 
+          duration = NULL
+        )
         return()
       }
       
       tryCatch({
-        # Siapkan data untuk join (menggunakan DISTRICTCODE otomatis)
-        data_for_join <- values$current_data %>%
-          select(DISTRICTCODE, all_of(input$map_variable)) %>%
-          rename(join_id = DISTRICTCODE,
-                 map_value = !!input$map_variable)
+        # Gunakan geojsonio langsung 
+        sp_data <- geojsonio::geojson_read(geojson_path, what = "sp")
         
-        # Siapkan GeoJSON untuk join - ambil juga nama kabupaten jika ada
-        geojson_cols <- names(map_data$geojson)
-        
-        # Kolom nama adalah CITY_NAME
-        geojson_for_join <- map_data$geojson %>%
-          rename(join_id = DISTRICTCODE,
-                 district_name = CITY_NAME)
-        
-        # Join data
-        merged_data <- geojson_for_join %>%
-          left_join(data_for_join, by = "join_id")
-        
-        # Cek hasil join
-        missing_data <- sum(is.na(merged_data$map_value))
-        successful_joins <- sum(!is.na(merged_data$map_value))
-        
-        if (missing_data > 0) {
-          showNotification(paste("Peringatan:", missing_data, "wilayah tidak memiliki data"), 
-                           type = "warning")
+        # Pastikan CRS
+        if (is.na(sp::proj4string(sp_data))) {
+          sp::proj4string(sp_data) <- sp::CRS("+proj=longlat +datum=WGS84 +no_defs")
         }
         
-        if (successful_joins == 0) {
-          showNotification("Tidak ada data yang berhasil di-join. Periksa kembali DISTRICTCODE.", type = "error")
+        map_data$geojson <- sp_data
+        map_data$geojson_loaded <- TRUE
+        
+        showNotification(paste("File GeoJSON berhasil dimuat -", length(sp_data), "wilayah"), type = "message")
+        
+      }, error = function(e) {
+        showNotification(paste("Error membaca GeoJSON:", e$message), type = "error")
+        map_data$geojson_loaded <- FALSE
+      })
+    })
+    
+    # Update pilihan variabel 
+    observe({
+      if (!is.null(values$current_data) && nrow(values$current_data) > 0) {
+        numeric_vars <- names(values$current_data)[sapply(values$current_data, is.numeric)]
+        numeric_vars <- numeric_vars[!numeric_vars %in% c("DISTRICTCODE")]
+        
+        if (length(numeric_vars) > 0) {
+          updateSelectInput(session, "map_variable",
+                            choices = setNames(numeric_vars, numeric_vars),
+                            selected = if("POVERTY" %in% numeric_vars) "POVERTY" else numeric_vars[1])
+        }
+      }
+    })
+    
+    # Generate peta dengan leaflet 
+    observeEvent(input$generate_map, {
+      req(map_data$geojson, input$map_variable, values$current_data)
+      
+      if (!map_data$geojson_loaded) {
+        showNotification("File GeoJSON belum dimuat", type = "error")
+        return()
+      }
+      
+      tryCatch({
+        geojson <- map_data$geojson
+        sovi_data_current <- values$current_data
+        variable_to_map <- input$map_variable
+        
+        # Cari kolom ID 
+        id_col <- NULL
+        for (col in c("ID", "KODE", "CODE", "id", "kode")) {
+          if (col %in% names(geojson@data)) {
+            id_col <- col
+            break
+          }
+        }
+        
+        if (is.null(id_col)) {
+          showNotification("Kolom ID tidak ditemukan dalam GeoJSON", type = "error")
+          return()
+        }
+        
+        # Standarisasi format
+        sovi_data_current$DISTRICTCODE <- as.character(sovi_data_current$DISTRICTCODE)
+        geojson@data[[id_col]] <- as.character(geojson@data[[id_col]])
+        
+        # Merge menggunakan sp
+        merged_data <- sp::merge(geojson, sovi_data_current, 
+                                 by.x = id_col, by.y = "DISTRICTCODE", 
+                                 all.x = FALSE)
+        
+        if (nrow(merged_data@data) == 0) {
+          showNotification("Tidak ada data yang berhasil di-join", type = "error")
           return()
         }
         
         map_data$merged_data <- merged_data
         
-        # Buat klasifikasi untuk data yang ada
-        map_values <- na.omit(merged_data$map_value)
+        # Ekstrak nilai variabel
+        map_values <- as.numeric(merged_data@data[[variable_to_map]])
+        map_values_clean <- na.omit(map_values)
         
-        if (length(map_values) == 0) {
-          showNotification("Tidak ada data yang dapat dipetakan", type = "error")
-          return()
-        }
-        
-        # Hitung breaks berdasarkan metode
+        # Buat breaks berdasarkan metode klasifikasi 
         if (input$classification_method == "quantile") {
-          breaks <- quantile(map_values, probs = seq(0, 1, length.out = input$n_bins + 1))
+          breaks <- quantile(map_values_clean, probs = seq(0, 1, length.out = input$n_bins + 1))
         } else if (input$classification_method == "equal") {
-          breaks <- seq(min(map_values), max(map_values), length.out = input$n_bins + 1)
+          breaks <- seq(min(map_values_clean), max(map_values_clean), length.out = input$n_bins + 1)
         } else if (input$classification_method == "jenks") {
           if (requireNamespace("classInt", quietly = TRUE)) {
-            breaks <- classInt::classIntervals(map_values, n = input$n_bins, style = "jenks")$brks
+            breaks <- classInt::classIntervals(map_values_clean, n = input$n_bins, style = "jenks")$brks
           } else {
-            showNotification("Package 'classInt' diperlukan untuk Natural Breaks", type = "warning")
-            breaks <- quantile(map_values, probs = seq(0, 1, length.out = input$n_bins + 1))
+            breaks <- quantile(map_values_clean, probs = seq(0, 1, length.out = input$n_bins + 1))
           }
-        } else if (input$classification_method == "sd") {
-          mean_val <- mean(map_values)
-          sd_val <- sd(map_values)
-          breaks <- c(min(map_values), 
-                      mean_val - sd_val, 
-                      mean_val, 
-                      mean_val + sd_val, 
-                      max(map_values))
         }
         
-        # Buat kategori
-        merged_data$map_category <- cut(merged_data$map_value, 
-                                        breaks = breaks, 
-                                        include.lowest = TRUE,
-                                        dig.lab = 3)
-        
-        # Generate peta interaktif dengan plotly
-        
-        # Transform ke WGS84 untuk plotly
-        merged_data_wgs84 <- sf::st_transform(merged_data, 4326)
-        
-        # Konversi sf object ke ggplot dulu, lalu ke plotly
-        base_plot <- ggplot(merged_data_wgs84) +
-          geom_sf(aes(fill = map_value, 
-                      text = paste0("Wilayah: ", district_name, "\n",
-                                    input$map_variable, ": ", 
-                                    ifelse(is.na(map_value), 
-                                           "Data tidak tersedia", 
-                                           format(map_value, big.mark = ",", scientific = FALSE)))),
-                  color = NA, size = 0.1) +  # Hilangkan border (color = NA)
-          theme_void() +
-          theme(
-            axis.text = element_blank(),
-            axis.ticks = element_blank(),
-            axis.line = element_blank(),
-            panel.grid = element_blank(),
-            panel.border = element_blank(),
-            panel.background = element_rect(fill = "white", color = NA),
-            plot.background = element_rect(fill = "white", color = NA),
-            legend.position = "right"  # Legend selalu ditampilkan
-          )
-        
-        # Gunakan plasma color scale
-        base_plot <- base_plot + 
-          scale_fill_viridis_c(option = "plasma", 
-                               na.value = "grey90",
-                               name = input$map_variable)
-        
-        # Konversi ke plotly dengan pengaturan yang lebih baik
-        plotly_map <- ggplotly(base_plot, tooltip = "text") %>%
-          layout(
-            title = list(
-              text = paste("Peta Tematik:", input$map_variable),
-              font = list(size = 16),
-              y = 0.98  # Posisi judul lebih tinggi agar tidak terpotong
-            ),
-            showlegend = TRUE,  # Legend selalu ditampilkan
-            plot_bgcolor = 'white',
-            paper_bgcolor = 'white',
-            margin = list(t = 50, b = 20, l = 20, r = 20),  # Margin untuk judul
-            # Hilangkan axis lines dan ticks
-            xaxis = list(
-              showgrid = FALSE,
-              zeroline = FALSE,
-              showline = FALSE,
-              showticklabels = FALSE,
-              ticks = ""
-            ),
-            yaxis = list(
-              showgrid = FALSE,
-              zeroline = FALSE,
-              showline = FALSE,
-              showticklabels = FALSE,
-              ticks = ""
-            )
-          ) %>%
-          config(
-            displayModeBar = TRUE,
-            scrollZoom = TRUE,  # Enable scroll zoom
-            doubleClick = 'reset',  # Double click to reset zoom
-            modeBarButtonsToRemove = c('select2d', 'lasso2d', 'autoScale2d', 
-                                       'hoverClosestCartesian', 'hoverCompareCartesian',
-                                       'toggleHover', 'sendDataToCloud'),
-            displaylogo = FALSE,
-            toImageButtonOptions = list(
-              format = 'png',
-              filename = paste0('peta_', input$map_variable),
-              height = 600,
-              width = 1000,
-              scale = 2
-            )
-          )
-        
-        map_data$plotly_map <- plotly_map
-        
-        # Hitung statistik spasial
-        spatial_stats <- data.frame(
-          Statistik = c("Jumlah Wilayah", "Wilayah dengan Data", "Wilayah Tanpa Data", 
-                        "Min", "Max", "Mean", "Median", "Std Dev"),
-          Nilai = c(
-            nrow(merged_data),
-            sum(!is.na(merged_data$map_value)),
-            sum(is.na(merged_data$map_value)),
-            round(min(map_values), 3),
-            round(max(map_values), 3),
-            round(mean(map_values), 3),
-            round(median(map_values), 3),
-            round(sd(map_values), 3)
-          )
+        # Buat palette 
+        pal <- colorNumeric(
+          palette = "plasma",
+          domain = range(map_values, na.rm = TRUE),
+          na.color = "#808080"
         )
         
-        # Interpretasi
+        # Labels 
+        labels <- sprintf(
+          "<strong>%s</strong><br/>%s: %.2f",
+          merged_data@data[[id_col]],
+          variable_to_map,
+          map_values
+        ) %>% lapply(htmltools::HTML)
+        
+        # Generate interpretasi 
         interpretation_text <- paste(
           "INTERPRETASI PETA TEMATIK:\n\n",
           "INFORMASI DATASET:\n",
-          "- Variabel yang dipetakan:", input$map_variable, "\n",
+          "- Variabel yang dipetakan:", variable_to_map, "\n",
           "- Jumlah wilayah total:", nrow(merged_data), "\n",
-          "- Wilayah dengan data:", sum(!is.na(merged_data$map_value)), "\n",
-          "- Wilayah tanpa data:", sum(is.na(merged_data$map_value)), "\n\n",
+          "- Wilayah dengan data:", sum(!is.na(map_values)), "\n",
+          "- Wilayah tanpa data:", sum(is.na(map_values)), "\n\n",
           "PENGATURAN VISUALISASI:\n",
           "- Metode klasifikasi:", input$classification_method, "\n",
-          "- Jumlah interval:", input$n_bins, "\n",
+          "- Jumlah interval:", input$n_bins, "\n\n",
           "STATISTIK DESKRIPTIF:\n",
-          "- Nilai minimum:", round(min(map_values), 3), "\n",
-          "- Nilai maksimum:", round(max(map_values), 3), "\n",
-          "- Rata-rata:", round(mean(map_values), 3), "\n",
-          "- Median:", round(median(map_values), 3), "\n",
-          "- Standar deviasi:", round(sd(map_values), 3), "\n\n",
-          "POLA SPASIAL:\n",
-          "- Rentang nilai:", round(max(map_values) - min(map_values), 3), "\n",
-          "- Koefisien variasi:", round(sd(map_values)/mean(map_values) * 100, 2), "%\n\n",
-          "INTERPRETASI:\n",
-          if (sd(map_values)/mean(map_values) > 0.5) {
-            "Variabilitas tinggi - terdapat perbedaan yang besar antar wilayah"
-          } else if (sd(map_values)/mean(map_values) > 0.3) {
-            "Variabilitas sedang - terdapat perbedaan moderat antar wilayah"
-          } else {
-            "Variabilitas rendah - nilai relatif merata antar wilayah"
-          }, "\n\n",
+          "- Nilai minimum:", round(min(map_values_clean), 3), "\n",
+          "- Nilai maksimum:", round(max(map_values_clean), 3), "\n",
+          "- Rata-rata:", round(mean(map_values_clean), 3), "\n",
+          "- Median:", round(median(map_values_clean), 3), "\n",
+          "- Standar deviasi:", round(sd(map_values_clean), 3), "\n\n",
           "CATATAN:\n",
-          "- Warna yang lebih terang (kuning) menunjukkan nilai yang lebih tinggi\n",
-          "- Warna yang lebih gelap (ungu) menunjukkan nilai yang lebih rendah\n",
-          "- Wilayah abu-abu menunjukkan data yang tidak tersedia\n",
-          "- Gunakan zoom dan pan untuk melihat detail wilayah tertentu"
+          "- Klik pada wilayah untuk melihat detail statistik\n",
+          "- Warna yang lebih terang menunjukkan nilai yang lebih tinggi\n",
+          "- Wilayah abu-abu menunjukkan data yang tidak tersedia"
         )
         
         map_data$interpretation <- interpretation_text
         
-        showNotification("Peta berhasil dibuat!", type = "message")
+        showNotification("Peta berhasil dibuat! Klik pada wilayah untuk detail.", type = "message")
         
       }, error = function(e) {
         showNotification(paste("Error membuat peta:", e$message), type = "error")
       })
     })
     
-    # Output untuk peta plotly
-    output$plotly_map <- renderPlotly({
-      if (!is.null(map_data$plotly_map)) {
-        map_data$plotly_map
-      } else {
-        # Plot kosong dengan pesan
-        plot_ly() %>%
-          add_annotations(
-            text = "Klik 'Buat Peta' untuk menampilkan peta interaktif\n\nFitur peta:\n• Scroll mouse untuk zoom in/out\n• Drag untuk pan\n• Hover untuk info detail\n\nTunggu beberapa saat untuk memuat peta",
-            x = 0.5, y = 0.5,
-            xref = "paper", yref = "paper",
-            showarrow = FALSE,
-            font = list(size = 16, color = "gray")
-          ) %>%
-          layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-            plot_bgcolor = 'white',
-            paper_bgcolor = 'white'
-          )
+    # Render peta leaflet 
+    output$distribution_map <- renderLeaflet({
+      req(map_data$merged_data, input$map_variable)
+      
+      merged_data <- map_data$merged_data
+      variable_to_map <- input$map_variable
+      
+      # Ekstrak nilai variabel
+      map_values <- as.numeric(merged_data@data[[variable_to_map]])
+      
+      # Buat palette
+      pal <- colorNumeric(
+        palette = "plasma",
+        domain = range(map_values, na.rm = TRUE),
+        na.color = "#808080"
+      )
+      
+      # Cari kolom ID
+      id_col <- NULL
+      for (col in c("ID", "KODE", "CODE", "id", "kode")) {
+        if (col %in% names(merged_data@data)) {
+          id_col <- col
+          break
+        }
+      }
+      
+      # Labels
+      labels <- sprintf(
+        "<strong>%s</strong><br/>%s: %.2f",
+        merged_data@data[[id_col]],
+        variable_to_map,
+        map_values
+      ) %>% lapply(htmltools::HTML)
+      
+      # Render peta
+      leaflet(merged_data) %>%
+        addTiles() %>%
+        setView(lng = 118, lat = -2, zoom = 5) %>%
+        addPolygons(
+          fillColor = ~pal(merged_data@data[[variable_to_map]]),
+          weight = 2,
+          opacity = 1,
+          color = "white",
+          dashArray = "3",
+          fillOpacity = 0.7,
+          highlight = highlightOptions(
+            weight = 5,
+            color = "#666",
+            dashArray = "",
+            fillOpacity = 0.7,
+            bringToFront = TRUE
+          ),
+          label = labels,
+          labelOptions = labelOptions(
+            style = list("font-weight" = "normal", padding = "3px 8px"),
+            textsize = "15px",
+            direction = "auto"
+          ),
+          layerId = ~merged_data@data[[id_col]]
+        ) %>%
+        addLegend(
+          pal = pal, 
+          values = ~merged_data@data[[variable_to_map]], 
+          opacity = 0.7, 
+          title = variable_to_map,
+          position = "bottomright"
+        )
+    })
+    
+    # Observer untuk menangkap klik pada peta 
+    observe({
+      req(input$distribution_map_shape_click)
+      
+      click <- input$distribution_map_shape_click
+      clicked_id <- click$id
+      
+      # Ambil data untuk district yang diklik
+      sovi_data_current <- values$current_data
+      district_info <- sovi_data_current[sovi_data_current$DISTRICTCODE == clicked_id, ]
+      
+      if (nrow(district_info) > 0) {
+        map_click_data$selected_district <- clicked_id
+        map_click_data$district_data <- district_info
+        map_click_data$show_stats <- TRUE
       }
     })
     
-    output$spatial_stats <- renderTable({
-      req(map_data$merged_data)
+    # Output untuk panel statistik detail 
+    output$district_info_panel <- renderUI({
+      if (!map_click_data$show_stats || is.null(map_click_data$district_data)) {
+        return(
+          div(
+            style = "text-align: center; padding: 30px; color: #666;",
+            icon("mouse-pointer", style = "font-size: 3em; color: #3498db; margin-bottom: 15px;"),
+            h4("Klik pada peta untuk melihat statistik"),
+            p("Pilih kabupaten/kota di peta untuk menampilkan informasi detail"),
+            hr(),
+            h5("Petunjuk:"),
+            tags$ul(
+              tags$li("Klik tombol 'Buat Peta' untuk memuat peta"),
+              tags$li("Pilih variabel yang ingin divisualisasikan"),
+              tags$li("Klik pada wilayah di peta untuk detail"),
+              style = "text-align: left; color: #999;"
+            )
+          )
+        )
+      }
       
-      map_values <- na.omit(map_data$merged_data$map_value)
+      district_data <- map_click_data$district_data
+      district_id <- map_click_data$selected_district
+      all_data <- values$current_data
+      
+      # Panel informasi district 
+      div(
+        # Header
+        div(
+          style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                   color: white; padding: 15px; border-radius: 8px 8px 0 0; margin-bottom: 15px;",
+          h3(style = "margin: 0; text-align: center;", 
+             paste("Wilayah:", district_id)),
+          p(style = "margin: 5px 0 0 0; text-align: center; font-size: 14px; opacity: 0.9;",
+            "Detail Statistik Kerentanan Sosial")
+        ),
+        
+        # Konten statistik
+        div(
+          style = "padding: 0 15px;",
+          
+          # Variabel yang sedang dipetakan
+          if (!is.null(input$map_variable)) {
+            current_var <- input$map_variable
+            current_value <- as.numeric(district_data[[current_var]])
+            
+            # Hitung persentil
+            all_values <- as.numeric(all_data[[current_var]])
+            percentile <- round(100 * sum(all_values <= current_value, na.rm = TRUE) / sum(!is.na(all_values)), 1)
+            
+            div(
+              style = "background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #007bff;",
+              h4(style = "color: #007bff; margin-top: 0;", "Variabel Terpilih"),
+              p(strong(current_var), ": ", 
+                span(style = "font-size: 18px; color: #28a745; font-weight: bold;", 
+                     round(current_value, 2))),
+              p("Persentil: ", 
+                span(style = paste0("color: ", if(percentile > 75) "#dc3545" else if(percentile > 50) "#ffc107" else "#28a745", "; font-weight: bold;"), 
+                     paste0(percentile, "%"))),
+              p(style = "font-size: 12px; color: #6c757d; margin: 0;",
+                "Ranking ", percentile, " dari 100 wilayah")
+            )
+          },
+          
+          # Ringkasan semua indikator 
+          h4("Ringkasan Indikator Utama"),
+          div(
+            style = "max-height: 300px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px;",
+            {
+              numeric_vars <- names(all_data)[sapply(all_data, is.numeric)]
+              numeric_vars <- numeric_vars[!numeric_vars %in% c("DISTRICTCODE")]
+              top_vars <- head(numeric_vars, 8)  # Tampilkan 8 teratas
+              
+              lapply(top_vars, function(var) {
+                value <- as.numeric(district_data[[var]])
+                all_vals <- as.numeric(all_data[[var]])
+                pct <- round(100 * sum(all_vals <= value, na.rm = TRUE) / sum(!is.na(all_vals)), 1)
+                status <- if(pct > 75) "Tinggi" else if(pct > 50) "Sedang" else "Rendah"
+                
+                div(
+                  style = "border-bottom: 1px solid #dee2e6; padding: 8px 0;",
+                  strong(var), ": ", round(value, 2),
+                  span(style = paste0("float: right; color: ", 
+                                      if(status == "Tinggi") "#dc3545" else if(status == "Sedang") "#ffc107" else "#28a745"),
+                       status)
+                )
+              })
+            }
+          ),
+          
+          # Tombol tutup
+          div(
+            style = "margin-top: 20px; text-align: center;",
+            actionButton(session$ns("close_stats"), "Tutup Detail", 
+                         style = "background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px;")
+          )
+        )
+      )
+    })
+    
+    # Observer untuk menutup panel statistik 
+    observeEvent(input$close_stats, {
+      map_click_data$show_stats <- FALSE
+      map_click_data$selected_district <- NULL
+      map_click_data$district_data <- NULL
+    })
+    
+    # Output statistik spasial 
+    output$spatial_stats <- renderTable({
+      req(map_data$merged_data, input$map_variable)
+      
+      map_values <- na.omit(as.numeric(map_data$merged_data@data[[input$map_variable]]))
       
       data.frame(
-        Statistik = c("Jumlah Wilayah", "Wilayah dengan Data", "Wilayah Tanpa Data", 
+        Statistik = c("Jumlah Wilayah", "Data Tersedia", "Data Kosong", 
                       "Min", "Max", "Mean", "Median", "Std Dev"),
         Nilai = c(
           nrow(map_data$merged_data),
-          sum(!is.na(map_data$merged_data$map_value)),
-          sum(is.na(map_data$merged_data$map_value)),
+          length(map_values),
+          nrow(map_data$merged_data) - length(map_values),
           round(min(map_values), 3),
           round(max(map_values), 3),
           round(mean(map_values), 3),
@@ -501,20 +528,21 @@ petaServer <- function(id, values) {
       )
     })
     
+    # Output interpretasi 
     output$map_interpretation <- renderText({
       req(map_data$interpretation)
       map_data$interpretation
     })
     
-    # Download handlers
+    # Download handlers 
     output$download_map <- downloadHandler(
       filename = function() {
-        paste("peta_interaktif_", input$map_variable, "_", Sys.Date(), ".html", sep="")
+        paste("peta_", input$map_variable, "_", Sys.Date(), ".png", sep="")
       },
       content = function(file) {
-        if (!is.null(map_data$plotly_map)) {
-          # Untuk peta plotly, simpan sebagai HTML
-          htmlwidgets::saveWidget(map_data$plotly_map, file = file, selfcontained = TRUE)
+        if (!is.null(map_data$merged_data)) {
+          # Untuk leaflet, capture sebagai screenshot atau buat plot ggplot
+          showNotification("Fitur download sedang dalam pengembangan", type = "warning")
         }
       }
     )
@@ -523,9 +551,8 @@ petaServer <- function(id, values) {
       filename = function() paste("data_peta_", input$map_variable, "_", Sys.Date(), ".csv", sep=""),
       content = function(file) {
         if (!is.null(map_data$merged_data)) {
-          # Convert sf object to regular data frame untuk export
-          export_data <- map_data$merged_data
-          sf::st_geometry(export_data) <- NULL  # Remove geometry column
+          # Convert sp object to data frame
+          export_data <- map_data$merged_data@data
           write.csv(export_data, file, row.names = FALSE)
         }
       }
@@ -539,5 +566,6 @@ petaServer <- function(id, values) {
         }
       }
     )
+    
   })
 }

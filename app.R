@@ -20,7 +20,11 @@ library(classInt)  # Untuk Jenks Natural Breaks
 library(shinycssloaders) # Untuk withSpinner function
 library(RColorBrewer)
 library(htmlwidgets)
-library(viridis)
+library(leaflet)
+library(sf)
+library(geojsonio)  # Untuk geojson_read()
+library(sp)         # Untuk sp::merge() dan sp::proj4string()
+library(htmltools)
 
 # Sumber fungsi utilitas
 source("utils/helpers.R") 

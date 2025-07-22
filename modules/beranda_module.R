@@ -162,7 +162,7 @@ berandaServer <- function(id, values) {
         value = nrow(values$current_data),
         subtitle = "Jumlah Kabupaten/Kota",
         icon = icon("map-marker-alt"),
-        color = "aqua"
+        color = "purple"
       )
     })
     
@@ -186,7 +186,7 @@ berandaServer <- function(id, values) {
         value = num_provinces,
         subtitle = "Jumlah Provinsi",
         icon = icon("globe-asia"),
-        color = "green"
+        color = "purple"
       )
     })
     
