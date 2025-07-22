@@ -1,13 +1,6 @@
 # Helper Functions
 # utils/helpers.R
 
-# Pastikan ini dimuat di global.R atau app.R
-# library(ggplot2)
-# library(dplyr)
-# library(plotly)
-# library(officer)
-# library(moments) # Tambahkan ini jika Anda belum memuatnya secara eksplisit
-
 # Fungsi untuk menampilkan notifikasi
 show_notification <- function(message, type = "default") {
   # Tipe valid untuk showNotification: "default", "message", "warning", "error"
@@ -502,16 +495,6 @@ create_assumption_interpretation <- function(shapiro_test, vif_results, bp_test,
                             }, "\n\n"
     )
   }
-  
-  # 5. Kesimpulan Umum
-  interpretation <- paste(interpretation,
-                          "Kesimpulan Validitas Model:\n",
-                          "- Periksa semua asumsi di atas sebelum menginterpretasi hasil.\n",
-                          "- Jika asumsi dilanggar, hasil inferensi (p-value, interval kepercayaan) mungkin tidak valid.\n",
-                          "- Untuk prediksi, model masih bisa berguna meski asumsi tidak sepenuhnya terpenuhi.\n",
-                          "- Gunakan plot diagnostik untuk validasi visual tambahan."
-  )
-  
   return(interpretation)
 }
 
@@ -575,7 +558,7 @@ create_top_n_line_chart <- function(data, value_col, name_col, title = "Top 5 Da
 }
 
 
-# BARU: Fungsi generik untuk mengosongkan semua elemen di reactiveValues
+# Fungsi generik untuk mengosongkan semua elemen di reactiveValues
 clear_reactive_values <- function(reactive_values_obj) {
   for (name in names(reactive_values_obj)) {
     reactive_values_obj[[name]] <- NULL

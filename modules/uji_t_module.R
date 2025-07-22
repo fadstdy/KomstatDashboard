@@ -61,7 +61,7 @@ ujiTUI <- function(id) {
              # Tombol Aksi
              br(),
              
-             div(style = "width: 90%;",
+             div(style = "width: 90%; text-align: center;",
                  actionButton(ns("run_test"),
                               "Jalankan Uji t",
                               class = "btn-info",
@@ -70,7 +70,7 @@ ujiTUI <- function(id) {
              br(),
              # Perbaikan: Tambahkan div untuk mengatur lebar dan perataan tombol download
              h5("Download Hasil:"),
-             div(style = "width: 90%;",
+             div(style = "width: 90%; text-align: center;",
                  downloadButton(ns("download_results"),
                                 "Hasil Uji",
                                 class = "btn-info",

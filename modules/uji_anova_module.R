@@ -55,40 +55,33 @@ ujiAnovaUI <- function(id) {
                           "Tingkat Signifikansi:",
                           value = 0.05, min = 0.01, max = 0.1, step = 0.01),
              
-             # Opsi Post-hoc
+             # Opsi Post-hoc (disederhanakan, tidak ada lagi selectInput)
              conditionalPanel(
                condition = "input.test_type == 'one_way'",
                ns = ns,
-               selectInput(ns("posthoc_method"),
-                           "Metode Post-hoc (jika signifikan):",
-                           choices = list(
-                             "Tukey HSD" = "tukey",
-                             "Bonferroni" = "bonferroni",
-                             "LSD (Fisher)" = "lsd"
-                           )),
-               helpText("Post-hoc dilakukan otomatis jika ANOVA signifikan")
+               helpText("Uji Post-hoc (Tukey HSD) akan dilakukan otomatis jika ANOVA signifikan.")
              ),
              
              br(),
-             # Perbaikan: Tombol "Jalankan Uji ANOVA" agar rapi
+             # Tombol "Jalankan Uji ANOVA" agar rapi
              actionButton(ns("run_test"),
                           "Jalankan Uji ANOVA",
-                          class = "btn-warning", # Menghapus btn-lg untuk ukuran yang lebih standar
-                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px; font-size:18px;"), # Menyesuaikan style
+                          class = "btn-warning",
+                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px; font-size:18px; text-align: center;"),
              
              hr(),
              h5("Download:"),
              downloadButton(ns("download_results"), "Hasil Uji",
                             class = "btn-warning",
-                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px; text-align: center;"),
              br(),
              downloadButton(ns("download_plot"), "Plot Asumsi",
                             class = "btn-warning",
-                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px; text-align: center;"),
              br(),
              downloadButton(ns("download_report"), "Laporan",
                             class = "btn-warning",
-                            style = "width: 90%; display: block; margin: auto;")
+                            style = "width: 90%; display: block; margin: auto; text-align: center;")
            )
     ),
     
@@ -115,7 +108,7 @@ ujiAnovaUI <- function(id) {
              condition = "output.show_posthoc == true",
              ns = ns,
              box(
-               title = "Uji Post-hoc (Perbandingan Berpasangan)",
+               title = "Uji Post-hoc (Tukey HSD)", # Judul post-hoc diperbarui
                status = "info",
                solidHeader = TRUE,
                width = 12,
@@ -139,7 +132,10 @@ ujiAnovaUI <- function(id) {
   )
 }
 
+# ==========================================
 # UJI ANOVA - SERVER FUNCTION
+# ==========================================
+
 ujiAnovaServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
     
@@ -215,7 +211,7 @@ ujiAnovaServer <- function(id, values) {
         req(input$factor_variable)
         
         if (input$factor_variable == "") {
-          show_notification("Silakan pilih variabel faktor", type = "warning") # Menggunakan show_notification
+          show_notification("Silakan pilih variabel faktor", type = "warning")
           return()
         }
         
@@ -224,20 +220,20 @@ ujiAnovaServer <- function(id, values) {
                                              data[[input$factor_variable]]), ]
         
         if (nrow(complete_data) < 6) {
-          show_notification("Data tidak cukup untuk ANOVA (minimal 6 observasi)", type = "error") # Menggunakan show_notification
+          show_notification("Data tidak cukup untuk ANOVA (minimal 6 observasi)", type = "error")
           return()
         }
         
         groups <- unique(complete_data[[input$factor_variable]])
         if (length(groups) < 2) {
-          show_notification("Minimal harus ada 2 kelompok untuk ANOVA", type = "error") # Menggunakan show_notification
+          show_notification("Minimal harus ada 2 kelompok untuk ANOVA", type = "error")
           return()
         }
         
         # Cek ukuran setiap kelompok
         group_sizes <- table(complete_data[[input$factor_variable]])
         if (any(group_sizes < 2)) {
-          show_notification("Setiap kelompok harus memiliki minimal 2 observasi", type = "error") # Menggunakan show_notification
+          show_notification("Setiap kelompok harus memiliki minimal 2 observasi", type = "error")
           return()
         }
         
@@ -264,7 +260,7 @@ ujiAnovaServer <- function(id, values) {
           theme(axis.text.x = element_text(angle = 45, hjust = 1),
                 legend.position = "none")
         
-        # Post-hoc test jika signifikan
+        # Post-hoc test jika signifikan (hanya Tukey HSD)
         test_results$show_posthoc <- FALSE # Reset status post-hoc
         test_results$posthoc <- NULL # Clear previous posthoc results
         
@@ -273,37 +269,16 @@ ujiAnovaServer <- function(id, values) {
           if (!is.na(p_value) && p_value < input$alpha) {
             test_results$show_posthoc <- TRUE
             
-            # Pilih metode post-hoc
-            if (input$posthoc_method == "tukey") {
-              posthoc_result <- TukeyHSD(anova_model)
-              posthoc_table <- as.data.frame(posthoc_result[[input$factor_variable]])
-              posthoc_table$Comparison <- rownames(posthoc_table)
-              posthoc_table <- posthoc_table[, c("Comparison", "diff", "lwr", "upr", "p adj")]
-              names(posthoc_table) <- c("Perbandingan", "Perbedaan", "Batas_Bawah", "Batas_Atas", "P_adjusted")
-            } else if (input$posthoc_method == "bonferroni") {
-              posthoc_result <- pairwise.t.test(complete_data[[input$dependent_variable]],
-                                                complete_data[[input$factor_variable]],
-                                                p.adjust.method = "bonferroni")
-              posthoc_matrix <- posthoc_result$p.value
-              posthoc_table <- as.data.frame(as.table(posthoc_matrix))
-              names(posthoc_table) <- c("Grup1", "Grup2", "P_adjusted")
-              posthoc_table <- posthoc_table[!is.na(posthoc_table$P_adjusted), ]
-            } else { # LSD
-              posthoc_result <- pairwise.t.test(complete_data[[input$dependent_variable]],
-                                                complete_data[[input$factor_variable]],
-                                                p.adjust.method = "none")
-              posthoc_matrix <- posthoc_result$p.value
-              posthoc_table <- as.data.frame(as.table(posthoc_matrix))
-              names(posthoc_table) <- c("Grup1", "Grup2", "P_value")
-              posthoc_table <- posthoc_table[!is.na(posthoc_table$P_value), ]
-            }
+            # Langsung panggil TukeyHSD
+            posthoc_result <- TukeyHSD(anova_model)
+            posthoc_table <- as.data.frame(posthoc_result[[input$factor_variable]])
+            posthoc_table$Comparison <- rownames(posthoc_table)
+            posthoc_table <- posthoc_table[, c("Comparison", "diff", "lwr", "upr", "p adj")]
+            names(posthoc_table) <- c("Perbandingan", "Perbedaan", "Batas_Bawah", "Batas_Atas", "P_adjusted")
             
             # Tambahkan kolom signifikansi
-            p_col <- ifelse("P_adjusted" %in% names(posthoc_table), "P_adjusted", "P_value")
-            posthoc_table$Signifikan <- ifelse(posthoc_table[[p_col]] < input$alpha, "Ya", "Tidak")
-            
-            # Format p-value
-            posthoc_table[[p_col]] <- round(posthoc_table[[p_col]], 4)
+            posthoc_table$Signifikan <- ifelse(posthoc_table[["P_adjusted"]] < input$alpha, "Ya", "Tidak")
+            posthoc_table[["P_adjusted"]] <- round(posthoc_table[["P_adjusted"]], 4)
             
             test_results$posthoc <- posthoc_table
           }
@@ -362,8 +337,7 @@ ujiAnovaServer <- function(id, values) {
             }, "\n\n",
             if (test_results$show_posthoc) {
               paste("UJI POST-HOC:\n",
-                    "Karena ANOVA signifikan, dilakukan uji post-hoc (", input$posthoc_method,
-                    ") untuk mengetahui kelompok mana yang berbeda secara spesifik.")
+                    "Karena ANOVA signifikan, dilakukan uji post-hoc (Tukey HSD) untuk mengetahui kelompok mana yang berbeda secara spesifik.")
             } else {
               "UJI POST-HOC:\nTidak dilakukan karena ANOVA tidak signifikan."
             }
@@ -374,12 +348,12 @@ ujiAnovaServer <- function(id, values) {
         req(input$factor1, input$factor2)
         
         if (input$factor1 == "" || input$factor2 == "") {
-          show_notification("Silakan pilih kedua faktor", type = "warning") # Menggunakan show_notification
+          show_notification("Silakan pilih kedua faktor", type = "warning")
           return()
         }
         
         if (input$factor1 == input$factor2) {
-          show_notification("Pilih dua faktor yang berbeda", type = "warning") # Menggunakan show_notification
+          show_notification("Pilih dua faktor yang berbeda", type = "warning")
           return()
         }
         
@@ -389,14 +363,14 @@ ujiAnovaServer <- function(id, values) {
                                              data[[input$factor2]]), ]
         
         if (nrow(complete_data) < 12) {
-          show_notification("Data tidak cukup untuk ANOVA dua arah (minimal 12 observasi)", type = "error") # Menggunakan show_notification
+          show_notification("Data tidak cukup untuk ANOVA dua arah (minimal 12 observasi)", type = "error")
           return()
         }
         
         # Cek kombinasi faktor
         factor_combinations <- table(complete_data[[input$factor1]], complete_data[[input$factor2]])
         if (any(factor_combinations == 0)) {
-          show_notification("Beberapa kombinasi faktor tidak memiliki data. ANOVA dua arah memerlukan data di semua kombinasi.", # Menggunakan show_notification
+          show_notification("Beberapa kombinasi faktor tidak memiliki data. ANOVA dua arah memerlukan data di semua kombinasi.",
                             type = "warning")
         }
         
@@ -638,6 +612,7 @@ ujiAnovaServer <- function(id, values) {
             doc <- doc %>%
               officer::body_add_par(" ") %>%
               officer::body_add_par("Uji Post-hoc:", style = "heading 2") %>%
+              # Pastikan Officer menerima data.frame dengan nama baris sebagai kolom pertama jika ada
               officer::body_add_table(test_results$posthoc, style = "Table Grid")
           }
           
@@ -649,9 +624,9 @@ ujiAnovaServer <- function(id, values) {
             officer::body_add_par(paste("Generated on:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
           
           print(doc, target = file)
-          show_notification("Laporan Word berhasil dibuat!", type = "success") # Menggunakan show_notification
+          show_notification("Laporan Word berhasil dibuat!", type = "success")
         }, error = function(e) {
-          show_notification(paste("Error saat membuat laporan Word:", e$message), type = "error") # Menggunakan show_notification
+          show_notification(paste("Error saat membuat laporan Word:", e$message), type = "error")
         })
       }
     )

@@ -59,7 +59,7 @@ ujiAsumsiUI <- function(id) {
              # Tombol Aksi
              br(),
              # Perbaikan: Tambahkan div untuk mengatur lebar dan perataan tombol
-             div(style = "width: 90%;",
+             div(style = "width: 90%; text-align: center;",
                  actionButton(ns("run_assumption_test"),
                               "Jalankan Uji Asumsi",
                               class = "btn-success",
@@ -68,7 +68,7 @@ ujiAsumsiUI <- function(id) {
              br(),
              # Perbaikan: Tambahkan div untuk mengatur lebar dan perataan tombol download
              h5("Download Hasil:"),
-             div(style = "width: 90%;",
+             div(style = "width: 90%; text-align: center;",
                  downloadButton(ns("download_test_results"),
                                 "Download Hasil Uji",
                                 class = "btn-primary",

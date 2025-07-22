@@ -146,9 +146,8 @@ regresiLinearUI <- function(id) {
                             style = "background-color: #f8f9fa; padding: 10px; border-radius: 5px;",
                             h6("Interpretasi VIF:"),
                             tags$ul(
-                              tags$li("VIF < 5: Tidak ada multikolinearitas yang signifikan"),
-                              tags$li("VIF 5-10: Multikolinearitas moderat, perlu perhatian"),
-                              tags$li("VIF > 10: Multikolinearitas tinggi, pertimbangkan menghapus variabel")
+                              tags$li("VIF < 10: Tidak ada multikolinearitas yang signifikan"),
+                              tags$li("VIF >= 10: Multikolinearitas tinggi, pertimbangkan menghapus variabel")
                             )
                           )
                  ),
@@ -156,15 +155,11 @@ regresiLinearUI <- function(id) {
                           br(),
                           h5("Uji Breusch-Pagan"),
                           withSpinner(verbatimTextOutput(ns("bp_test_result"))),
-                          br(),
-                          p("Tip: Periksa juga 'Plot Residual vs Fitted' di tab Diagnostik Visual untuk inspeksi visual heteroskedastisitas.")
                  ),
                  tabPanel("Autokorelasi", # New Tab for Autocorrelation
                           br(),
                           h5("Uji Durbin-Watson"),
                           withSpinner(verbatimTextOutput(ns("dw_test_result"))),
-                          br(),
-                          p("Uji Durbin-Watson memeriksa keberadaan autokorelasi pada residual. Hipotesis nol adalah tidak ada autokorelasi.")
                  )
                )
              )
@@ -188,11 +183,7 @@ regresiLinearUI <- function(id) {
                  tabPanel("Cook's Distance",
                           br(),
                           withSpinner(plotOutput(ns("cooks_distance"), height = "400px")),
-                          p("Mengidentifikasi observasi berpengaruh. Nilai > 0.5 perlu diperhatikan.")),
-                 tabPanel("Leverage vs Residuals",
-                          br(),
-                          withSpinner(plotOutput(ns("leverage_plot"), height = "400px")),
-                          p("Mengidentifikasi outlier dan observasi berpengaruh tinggi."))
+                          p("Mengidentifikasi observasi berpengaruh. Nilai > 0.5 perlu diperhatikan."))
                )
              )
            )
@@ -509,13 +500,6 @@ regresiLinearServer <- function(id, values) {
       plot(regression_results$model, which = 4,
            main = "Cook's Distance",
            sub = "Nilai > 0.5 perlu diperhatikan")
-    })
-    
-    output$leverage_plot <- renderPlot({
-      req(regression_results$model)
-      plot(regression_results$model, which = 5,
-           main = "Residuals vs Leverage",
-           sub = "Identifikasi outlier dan observasi berpengaruh")
     })
     
     # Tampilkan interpretasi

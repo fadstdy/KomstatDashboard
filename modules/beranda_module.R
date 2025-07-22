@@ -84,7 +84,7 @@ berandaUI <- function(id) {
              width = 12,
              height = "auto",
              div(
-               h4("🔧 Fitur Analisis Utama:"),
+               h4("Fitur Analisis Utama:"),
                hr(),
                tags$ul(
                  tags$li(strong("Manajemen Data: "), "Transformasi dan kategorisasi variabel, termasuk interpretasi output."),
@@ -94,7 +94,7 @@ berandaUI <- function(id) {
                  tags$li(strong("Regresi Linear Berganda: "), "Analisis regresi berganda lengkap dengan uji asumsi (normalitas residual, multikolinearitas, heteroskedastisitas), serta penjelasan parameter dan kesimpulan model.")
                ),
                br(),
-               h4("📥 Fitur Ekspor:"),
+               h4("Fitur Ekspor:"),
                hr(),
                tags$ul(
                  tags$li("Download grafik (PNG/PDF)"),
@@ -115,7 +115,7 @@ berandaUI <- function(id) {
              width = 12,
              height = "auto",
              div(
-               h4("📊 Dataset: Data Kerentanan Sosial di Indonesia"),
+               h4("Dataset: Data Kerentanan Sosial di Indonesia"),
                hr(),
                tags$ul(
                  tags$li(strong("Sumber Data Utama: "), "Survei Sosial Ekonomi Nasional (SUSENAS) 2017 oleh BPS-Statistics Indonesia"),
@@ -124,7 +124,7 @@ berandaUI <- function(id) {
                  tags$li(strong("Cakupan Geografis: "), "511 Kabupaten/Kota di Seluruh Indonesia")
                ),
                br(),
-               h5("📈 Penjelasan Variabel Utama:"),
+               h5("Penjelasan Variabel Utama:"),
                withSpinner(tableOutput(ns("variable_descriptions_table"))),
                br()
              )
@@ -141,7 +141,7 @@ berandaUI <- function(id) {
              collapsible = TRUE,
              collapsed = FALSE,
              div(
-               h4("📋 Struktur Data:"),
+               h4("Struktur Data:"),
                withSpinner(DT::dataTableOutput(ns("data_preview"))),
                br(),
                downloadButton(ns("download_data"), "Download Data Lengkap",

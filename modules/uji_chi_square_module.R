@@ -64,22 +64,22 @@ ujiVariansUI <- function(id) {
              actionButton(ns("run_test"),
                           "Jalankan Uji Varians",
                           class = "btn-danger",
-                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px; font-size:18px;"),
+                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px; font-size:18px; text-align: center;"),
              
              hr(),
              h5("Download:"),
              # Tombol Download agar rapi
              downloadButton(ns("download_results"), "Hasil Uji",
                             class = "btn-danger",
-                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px; text-align: center;"),
              br(),
              downloadButton(ns("download_plot"), "Plot Asumsi",
                             class = "btn-danger",
-                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px; text-align: center;"),
              br(),
              downloadButton(ns("download_report"), "Laporan",
                             class = "btn-danger",
-                            style = "width: 90%; display: block; margin: auto;")
+                            style = "width: 90%; display: block; margin: auto; text-align: center;")
            )
     ),
     

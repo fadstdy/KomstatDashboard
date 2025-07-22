@@ -170,22 +170,22 @@ ujiProporsiUI <- function(id) {
              actionButton(ns("run_test"),
                           "Jalankan Uji Proporsi",
                           class = "btn-success",
-                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px;"), # Gunakan display:block, margin:auto
+                          style = "width: 90%; display: block; margin: auto; margin-bottom: 15px; text-align: center;"), # Gunakan display:block, margin:auto
              
              hr(),
              h5("Download Hasil:"),
              # Perbaikan: Tombol Download agar rapi
              downloadButton(ns("download_results"), "Hasil Uji",
                             class = "btn-success",
-                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px; text-align: center;"),
              br(),
              downloadButton(ns("download_plot"), "Plot Asumsi",
                             class = "btn-success",
-                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px;"),
+                            style = "width: 90%; display: block; margin: auto; margin-bottom: 7px; text-align: center;"),
              br(),
              downloadButton(ns("download_report"), "Laporan",
                             class = "btn-success",
-                            style = "width: 90%; display: block; margin: auto;")
+                            style = "width: 90%; display: block; margin: auto; text-align: center;")
            )
     ),
     

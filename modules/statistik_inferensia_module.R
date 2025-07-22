@@ -7,10 +7,7 @@ source("modules/uji_proporsi_module.R")
 source("modules/uji_anova_module.R")
 source("modules/uji_chi_square_module.R")
 
-# ==========================================
 # MAIN UI FUNCTION - SUBMENU STRUCTURE
-# ==========================================
-
 statistikInferensiaUI <- function(id) {
   ns <- NS(id)
   
@@ -22,7 +19,7 @@ statistikInferensiaUI <- function(id) {
              solidHeader = TRUE,
              width = 12,
              
-             # Navigation Pills untuk Submenu
+             # Navigation untuk Submenu
              div(
                style = "margin-bottom: 20px;",
                h4("Pilih Jenis Uji Statistik:"),
@@ -34,7 +31,7 @@ statistikInferensiaUI <- function(id) {
                                      style = "height: 100px; font-size: 16px; white-space: normal;")),
                  column(3,
                         actionButton(ns("show_prop_test"), 
-                                     HTML("<i class='fa fa-pie-chart'></i><br/>Uji Proporsi<br/><small>Perbandingan Kabupaten/Provinsi</small>"), 
+                                     HTML("<i class='fa fa-pie-chart'></i><br/>Uji Proporsi<br/><small>Perbandingan Proporsi</small>"), 
                                      class = "btn-success btn-lg btn-block",
                                      style = "height: 100px; font-size: 16px; white-space: normal;")),
                  column(3,
@@ -44,7 +41,7 @@ statistikInferensiaUI <- function(id) {
                                      style = "height: 100px; font-size: 16px; white-space: normal;")),
                  column(3,
                         actionButton(ns("show_chi_test"), 
-                                     HTML("<i class='fa fa-link'></i><br/>Uji Chi-Square<br/><small>Asosiasi Kategorikal</small>"), 
+                                     HTML("<i class='fa fa-link'></i><br/>Uji Varians<br/><small>Perbandingan Varians</small>"), 
                                      class = "btn-danger btn-lg btn-block",
                                      style = "height: 100px; font-size: 16px; white-space: normal;"))
                ),
@@ -53,12 +50,12 @@ statistikInferensiaUI <- function(id) {
                hr(),
                div(
                  style = "background-color: #f8f9fa; padding: 15px; border-radius: 5px;",
-                 h5("ℹ️ Panduan Pemilihan Uji:"),
+                 h5("Panduan Pemilihan Uji:"),
                  tags$ul(
                    tags$li(strong("Uji t:"), " Untuk membandingkan rata-rata antara satu atau dua kelompok"),
-                   tags$li(strong("Uji Proporsi:"), " Untuk membandingkan proporsi antar kabupaten/kota atau provinsi"), 
+                   tags$li(strong("Uji Proporsi:"), " Untuk membandingkan proporsi satu atau dua kelompok"), 
                    tags$li(strong("Uji ANOVA:"), " Untuk membandingkan rata-rata lebih dari dua kelompok"),
-                   tags$li(strong("Uji Chi-Square:"), " Untuk menguji asosiasi antara dua variabel kategorikal")
+                   tags$li(strong("Uji Varians:"), " Untuk menguji apakah varians (keragaman) antar dua atau lebih kelompok")
                  )
                )
              )
@@ -91,10 +88,7 @@ statistikInferensiaUI <- function(id) {
   )
 }
 
-# ==========================================
 # MAIN SERVER FUNCTION
-# ==========================================
-
 statistikInferensiaServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
     

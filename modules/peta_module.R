@@ -415,8 +415,7 @@ petaServer <- function(id, values) {
         
         # Interpretasi
         interpretation_text <- paste(
-          "INTERPRETASI PETA TEMATIK:\n",
-          "=========================\n\n",
+          "INTERPRETASI PETA TEMATIK:\n\n",
           "INFORMASI DATASET:\n",
           "- Variabel yang dipetakan:", input$map_variable, "\n",
           "- Jumlah wilayah total:", nrow(merged_data), "\n",
@@ -425,7 +424,6 @@ petaServer <- function(id, values) {
           "PENGATURAN VISUALISASI:\n",
           "- Metode klasifikasi:", input$classification_method, "\n",
           "- Jumlah interval:", input$n_bins, "\n",
-          "- Palet warna: Plasma\n\n",
           "STATISTIK DESKRIPTIF:\n",
           "- Nilai minimum:", round(min(map_values), 3), "\n",
           "- Nilai maksimum:", round(max(map_values), 3), "\n",
