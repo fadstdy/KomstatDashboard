@@ -1,8 +1,5 @@
 # Main App File - app.R
-# Dashboard Analisis Statistik
-# Author: Dashboard Analytics Team
 
-# Load required libraries
 library(shiny)
 library(shinydashboard)
 library(DT)
@@ -38,12 +35,12 @@ source("modules/uji_asumsi_module.R")
 source("modules/statistik_inferensia_module.R")
 source("modules/regresi_linear_module.R")
 
-# --- Pemuatan Data ---
+# Pemuatan Data
 data_path <- "data/data_soviedit.csv" 
 
 # Periksa apakah file ada, jika tidak, berikan peringatan atau hentikan aplikasi
 if (!file.exists(data_path)) {
-  stop(paste0("File data utama tidak ditemukan di: ", data_path, ". Mohon pastikan file 'data_sovi.csv' ada di lokasi yang benar."))
+  stop(paste0("File data utama tidak ditemukan di: ", data_path, ". Mohon pastikan file 'data_soviedit.csv' ada di lokasi yang benar."))
 }
 
 global_combined_data <- readr::read_csv(data_path, show_col_types = FALSE)
@@ -59,7 +56,7 @@ if ("CITY_NAME" %in% names(global_combined_data)) {
   global_combined_data$CITY_NAME <- as.factor(global_combined_data$CITY_NAME)
 }
 
-# --- AKHIR Pemuatan Data ---
+# AKHIR Pemuatan Data
 
 
 # Definisi UI

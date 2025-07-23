@@ -53,106 +53,137 @@ berandaUI <- function(id) {
                                  withSpinner(plotlyOutput(ns("poverty_line"), height = "300px")))
                         )
                ),
-               tabPanel("Jumlah Penduduk Tertinggi",
+               tabPanel("Persentase Anak <5 Tahun Tertinggi",
                         br(),
                         fluidRow(
                           column(6,
-                                 withSpinner(plotlyOutput(ns("population_bar"), height = "300px"))),
+                                 withSpinner(plotlyOutput(ns("children_bar"), height = "300px"))),
                           column(6,
-                                 withSpinner(plotlyOutput(ns("population_line"), height = "300px")))
+                                 withSpinner(plotlyOutput(ns("children_line"), height = "300px")))
                         )
                ),
                tabPanel("Tingkat Buta Huruf Tertinggi",
                         br(),
                         fluidRow(
                           column(6,
-                                 withSpinner(plotlyOutput(ns("illiterate_line"), height = "300px"))),
+                                 withSpinner(plotlyOutput(ns("illiterate_bar"), height = "300px"))),
                           column(6,
-                                 withSpinner(plotlyOutput(ns("illiterate_bar"), height = "300px")))
+                                 withSpinner(plotlyOutput(ns("illiterate_line"), height = "300px")))
+                        )
+               ),
+               tabPanel("Persentase Rumah Tanpa Drainase Tertinggi",
+                        br(),
+                        fluidRow(
+                          column(6,
+                                 withSpinner(plotlyOutput(ns("nosewer_bar"), height = "300px"))),
+                          column(6,
+                                 withSpinner(plotlyOutput(ns("nosewer_line"), height = "300px")))
                         )
                )
              )
            )
     ),
     
-    # Bagian Fitur Dashboard
+    # Tab untuk Metadata dan Fitur Dashboard
     column(12,
            box(
-             title = "Fitur Dashboard",
+             title = "Informasi Dashboard",
              status = "success",
              solidHeader = TRUE,
              width = 12,
-             height = "auto",
-             div(
-               h4("Fitur Analisis Utama:"),
-               hr(),
-               tags$ul(
-                 tags$li(strong("Manajemen Data: "), "Transformasi dan kategorisasi variabel, termasuk interpretasi output."),
-                 tags$li(strong("Eksplorasi Data: "), "Statistik deskriptif dan visualisasi (histogram, boxplot, barplot), tabel ringkasan, dan peta (jika memungkinkan), disertai interpretasi."),
-                 tags$li(strong("Uji Asumsi: "), "Pengujian normalitas (Shapiro-Wilk, Q-Q plot), homogenitas varians (Levene, Bartlett), multikolinearitas (VIF), dan heteroskedastisitas (ncvTest, Breusch-Pagan) dengan interpretasi."),
-                 tags$li(strong("Statistik Inferensia: "), "Uji beda rata-rata (satu/dua kelompok), uji proporsi (satu/dua kelompok), uji variansi, ANOVA (satu/dua arah), dan penjelasan hasil."),
-                 tags$li(strong("Regresi Linear Berganda: "), "Analisis regresi berganda lengkap dengan uji asumsi (normalitas residual, multikolinearitas, heteroskedastisitas), serta penjelasan parameter dan kesimpulan model.")
-               ),
-               br(),
-               h4("Fitur Ekspor:"),
-               hr(),
-               tags$ul(
-                 tags$li("Download grafik (PNG/PDF)"),
-                 tags$li("Export tabel (CSV/Excel)"),
-                 tags$li("Laporan lengkap (Word/PDF)"),
-                 tags$li("Tombol unduh gabungan untuk seluruh isi tiap menu.")
-               )
-             )
-           )
-    ),
-    
-    # Bagian Informasi Dataset Utama
-    column(12,
-           box(
-             title = "Informasi Dataset Utama",
-             status = "info",
-             solidHeader = TRUE,
-             width = 12,
-             height = "auto",
-             div(
-               h4("Dataset: Data Kerentanan Sosial di Indonesia"),
-               hr(),
-               tags$ul(
-                 tags$li(strong("Sumber Data Utama: "), "Survei Sosial Ekonomi Nasional (SUSENAS) 2017 oleh BPS-Statistics Indonesia"),
-                 tags$li(strong("Periode Data: "), "2017"),
-                 tags$li(strong("Unit Analisis: "), "Kabupaten/Kota di Indonesia"),
-                 tags$li(strong("Cakupan Geografis: "), "511 Kabupaten/Kota di Seluruh Indonesia")
-               ),
-               br(),
-               h5("Penjelasan Variabel Utama:"),
-               withSpinner(tableOutput(ns("variable_descriptions_table"))),
-               br()
-             )
-           )
-    ),
-    
-    # Bagian Preview Data
-    column(12,
-           box(
-             title = "Preview Data",
-             status = "primary",
-             solidHeader = TRUE,
-             width = 12,
              collapsible = TRUE,
-             collapsed = FALSE,
-             div(
-               h4("Struktur Data:"),
-               withSpinner(DT::dataTableOutput(ns("data_preview"))),
-               br(),
-               downloadButton(ns("download_data"), "Download Data Lengkap",
-                              class = "btn-primary")
+             tabsetPanel(
+               # Tab Metadata
+               tabPanel("Metadata Dataset",
+                        br(),
+                        div(
+                          h4("Dataset: Data Kerentanan Sosial di Indonesia"),
+                          hr(),
+                          fluidRow(
+                            column(6,
+                                   div(
+                                     style = "background: #f8f9fa; padding: 15px; border-radius: 8px;",
+                                     h5("Informasi Umum"),
+                                     tags$ul(
+                                       tags$li(strong("Sumber Data: "), "Survei Sosial Ekonomi Nasional (SUSENAS) 2017 oleh BPS-Statistics Indonesia"),
+                                       tags$li(strong("Periode Data: "), "2017"),
+                                       tags$li(strong("Unit Analisis: "), "Kabupaten/Kota di Indonesia"),
+                                       tags$li(strong("Cakupan Geografis: "), "511 Kabupaten/Kota di Seluruh Indonesia")
+                                     )
+                                   )
+                            )
+                          ),
+                          br(),
+                          h5("Deskripsi Variabel:"),
+                          withSpinner(tableOutput(ns("variable_descriptions_table")))
+                        )
+               ),
+               
+               # Tab Fitur Dashboard
+               tabPanel("Fitur Dashboard",
+                        br(),
+                        fluidRow(
+                          column(6,
+                                 div(
+                                   style = "background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px;",
+                                   h5(icon("tools"), " Fitur Analisis Utama"),
+                                   tags$ul(
+                                     tags$li(strong("Manajemen Data: "), "Transformasi dan kategorisasi variabel, handling missing values dan outlier"),
+                                     tags$li(strong("Eksplorasi Data: "), "Statistik deskriptif, visualisasi distribusi, analisis korelasi"),
+                                     tags$li(strong("Peta Tematik: "), "Visualisasi spasial dengan peta interaktif"),
+                                     tags$li(strong("Uji Asumsi: "), "Pengujian normalitas, homogenitas, multikolinearitas"),
+                                     tags$li(strong("Statistik Inferensia: "), "Uji hipotesis, ANOVA, perbandingan grup"),
+                                     tags$li(strong("Regresi Linear: "), "Analisis regresi berganda dengan diagnostik model")
+                                   )
+                                 )
+                          ),
+                          column(6,
+                                 div(
+                                   style = "background: #d1ecf1; padding: 15px; border-radius: 8px; margin-bottom: 15px;",
+                                   h5(icon("download"), " Fitur Export & Download"),
+                                   tags$ul(
+                                     tags$li("Download grafik (PNG/PDF)"),
+                                     tags$li("Export tabel (CSV/Excel)"),
+                                     tags$li("Laporan interpretasi (TXT)"),
+                                     tags$li("Download gabungan per menu"),
+                                     tags$li("Data hasil transformasi")
+                                   )
+                                 ),
+                                 div(
+                                   style = "background: #f8d7da; padding: 15px; border-radius: 8px;",
+                                   h5(icon("lightbulb"), " Tips Penggunaan"),
+                                   tags$ul(
+                                     tags$li("Mulai dari menu Manajemen Data untuk preprocessing"),
+                                     tags$li("Lakukan eksplorasi data sebelum analisis inferensia"),
+                                     tags$li("Periksa asumsi sebelum uji parametrik"),
+                                     tags$li("Gunakan peta untuk analisis pola spasial"),
+                                     tags$li("Download interpretasi untuk dokumentasi")
+                                   )
+                                 )
+                          )
+                        )
+               ),
+               
+               # Tab Preview Data
+               tabPanel(" Preview Data",
+                        br(),
+                        div(
+                          h4("Struktur Data:"),
+                          p("Tabel di bawah menampilkan 10 baris pertama dari dataset. Gunakan fitur pencarian dan filter untuk eksplorasi lebih lanjut."),
+                          withSpinner(DT::dataTableOutput(ns("data_preview"))),
+                          br(),
+                          div(style = "text-align: center;",
+                              downloadButton(ns("download_data"), "Download Data Lengkap",
+                                             class = "btn-primary"))
+                        )
+               )
              )
            )
     )
   )
 }
 
-# Fungsi Server untuk Beranda - DIPERBAIKI
+# Fungsi Server untuk Beranda
 berandaServer <- function(id, values) {
   moduleServer(id, function(input, output, session) {
     
@@ -162,7 +193,7 @@ berandaServer <- function(id, values) {
         value = nrow(values$current_data),
         subtitle = "Jumlah Kabupaten/Kota",
         icon = icon("map-marker-alt"),
-        color = "purple"
+        color = "light-blue"
       )
     })
     
@@ -190,35 +221,27 @@ berandaServer <- function(id, values) {
       )
     })
     
-    # --- Bagian Reactive untuk Data Top 5 - DIPERBAIKI ---
+    # Fungsi helper untuk mendapatkan top N data
     get_top_n_data <- function(data, var_name, n = 5) {
-      # Tambahan validasi yang lebih ketat
       if (is.null(data) || nrow(data) == 0) return(NULL)
       if (!var_name %in% names(data)) return(NULL)
       if (!"CITY_NAME" %in% names(data)) return(NULL)
       
-      # Filter data yang valid (tidak NA)
       data_clean <- data[!is.na(data[[var_name]]), ]
       if (nrow(data_clean) == 0) return(NULL)
       
-      # Urutkan dan ambil top n
       data_clean[order(-data_clean[[var_name]]), ][1:min(n, nrow(data_clean)), ]
     }
     
-    # Reactive data dengan error handling
+    # Reactive data dengan error handling 
     top5_poverty_data <- reactive({
       req(values$current_data)
       get_top_n_data(values$current_data, "POVERTY")
     })
     
-    top5_noelectric_data <- reactive({
+    top5_children_data <- reactive({
       req(values$current_data)
-      get_top_n_data(values$current_data, "NOELECTRIC")
-    })
-    
-    top5_population_data <- reactive({
-      req(values$current_data)
-      get_top_n_data(values$current_data, "POPULATION")
+      get_top_n_data(values$current_data, "CHILDREN")
     })
     
     top5_illiterate_data <- reactive({
@@ -226,14 +249,16 @@ berandaServer <- function(id, values) {
       get_top_n_data(values$current_data, "ILLITERATE")
     })
     
-    # --- Render Plot dengan Error Handling yang Lebih Baik ---
+    top5_nosewer_data <- reactive({
+      req(values$current_data)
+      get_top_n_data(values$current_data, "NOSEWER")
+    })
     
-    # Plot untuk Tingkat Kemiskinan Tertinggi
+    # Plot untuk Tingkat Kemiskinan Tertinggi - DIPERBAIKI
     output$poverty_bar <- renderPlotly({
       tryCatch({
         data <- top5_poverty_data()
         if (is.null(data)) {
-          # Return empty plotly jika data kosong
           plotly::plot_ly() %>% 
             plotly::add_text(text = "Data tidak tersedia", 
                              x = 0.5, y = 0.5, showlegend = FALSE) %>%
@@ -247,7 +272,6 @@ berandaServer <- function(id, values) {
           ggplotly(p, tooltip = "text")
         }
       }, error = function(e) {
-        # Error fallback
         plotly::plot_ly() %>% 
           plotly::add_text(text = paste("Error:", e$message), 
                            x = 0.5, y = 0.5, showlegend = FALSE)
@@ -256,18 +280,18 @@ berandaServer <- function(id, values) {
     
     output$poverty_line <- renderPlotly({
       tryCatch({
-        data <- top5_population_data()
+        data <- top5_poverty_data()
         if (is.null(data)) {
           plotly::plot_ly() %>% 
             plotly::add_text(text = "Data tidak tersedia", 
                              x = 0.5, y = 0.5, showlegend = FALSE)
         } else {
           p <- create_top_n_line_chart(data,
-                                       value_col = "POPULATION",
+                                       value_col = "POVERTY",
                                        name_col = "CITY_NAME",
-                                       title = "Top 5 Daerah dengan Tingkat Kemiskinan Tertinggi",
+                                       title = "Trend Tingkat Kemiskinan",
                                        x_label = "Kabupaten/Kota",
-                                       y_label = "Tingkat Kemiskinan %")
+                                       y_label = "Tingkat Kemiskinan (%)")
           ggplotly(p, tooltip = "text")
         }
       }, error = function(e) {
@@ -277,17 +301,17 @@ berandaServer <- function(id, values) {
       })
     })
     
-    # Plot untuk Jumlah Penduduk Tertinggi
-    output$population_bar <- renderPlotly({
+    # Plot untuk Jumlah Penduduk Tertinggi 
+    output$children_bar <- renderPlotly({
       tryCatch({
-        data <- top5_population_data()
+        data <- top5_children_data()
         if (is.null(data)) {
           plotly::plot_ly() %>% 
             plotly::add_text(text = "Data tidak tersedia", 
                              x = 0.5, y = 0.5, showlegend = FALSE)
         } else {
           p <- create_top_n_bar_plot(data,
-                                     value_col = "POPULATION",
+                                     value_col = "CHILDREN",
                                      name_col = "CITY_NAME",
                                      title = "Top 5 Daerah dengan Jumlah Penduduk Tertinggi",
                                      x_label = "Jumlah Penduduk",
@@ -301,18 +325,18 @@ berandaServer <- function(id, values) {
       })
     })
     
-    output$population_line <- renderPlotly({
+    output$children_line <- renderPlotly({
       tryCatch({
-        data <- top5_population_data()
+        data <- top5_children_data()
         if (is.null(data)) {
           plotly::plot_ly() %>% 
             plotly::add_text(text = "Data tidak tersedia", 
                              x = 0.5, y = 0.5, showlegend = FALSE)
         } else {
           p <- create_top_n_line_chart(data,
-                                       value_col = "POPULATION",
+                                       value_col = "CHILDREN",
                                        name_col = "CITY_NAME",
-                                       title = "Top 5 Daerah dengan Jumlah Penduduk Tertinggi",
+                                       title = "Trend Jumlah Penduduk",
                                        x_label = "Kabupaten/Kota",
                                        y_label = "Jumlah Penduduk")
           ggplotly(p, tooltip = "text")
@@ -324,7 +348,30 @@ berandaServer <- function(id, values) {
       })
     })
     
-    # Plot untuk Tingkat Buta Huruf Tertinggi
+    # Plot untuk Tingkat Buta Huruf Tertinggi 
+    output$illiterate_bar <- renderPlotly({
+      tryCatch({
+        data <- top5_illiterate_data()
+        if (is.null(data)) {
+          plotly::plot_ly() %>% 
+            plotly::add_text(text = "Data tidak tersedia", 
+                             x = 0.5, y = 0.5, showlegend = FALSE)
+        } else {
+          p <- create_top_n_bar_plot(data,
+                                     value_col = "ILLITERATE",
+                                     name_col = "CITY_NAME",
+                                     title = "Top 5 Daerah dengan Tingkat Buta Huruf Tertinggi",
+                                     x_label = "Tingkat Buta Huruf (%)",
+                                     fill_low = "lightcyan", fill_high = "darkcyan")
+          ggplotly(p, tooltip = "text")
+        }
+      }, error = function(e) {
+        plotly::plot_ly() %>% 
+          plotly::add_text(text = paste("Error:", e$message), 
+                           x = 0.5, y = 0.5, showlegend = FALSE)
+      })
+    })
+    
     output$illiterate_line <- renderPlotly({
       tryCatch({
         data <- top5_illiterate_data()
@@ -336,7 +383,7 @@ berandaServer <- function(id, values) {
           p <- create_top_n_line_chart(data,
                                        value_col = "ILLITERATE",
                                        name_col = "CITY_NAME",
-                                       title = "Top 5 Daerah dengan Tingkat Buta Huruf Tertinggi",
+                                       title = "Trend Tingkat Buta Huruf",
                                        x_label = "Kabupaten/Kota",
                                        y_label = "Tingkat Buta Huruf (%)")
           ggplotly(p, tooltip = "text")
@@ -348,20 +395,21 @@ berandaServer <- function(id, values) {
       })
     })
     
-    output$illiterate_bar <- renderPlotly({
+    # Plot untuk Persentase Rumah Tanpa Drainase Tertinggi - BARU
+    output$nosewer_bar <- renderPlotly({
       tryCatch({
-        data <- top5_population_data()
+        data <- top5_nosewer_data()
         if (is.null(data)) {
           plotly::plot_ly() %>% 
             plotly::add_text(text = "Data tidak tersedia", 
                              x = 0.5, y = 0.5, showlegend = FALSE)
         } else {
           p <- create_top_n_bar_plot(data,
-                                     value_col = "POPULATION",
+                                     value_col = "NOSEWER",
                                      name_col = "CITY_NAME",
-                                     title = "Top 5 Daerah dengan Tingkat Buta Huruf Tertinggi",
-                                     x_label = "Jumlah Penduduk",
-                                     fill_low = "lightcyan", fill_high = "darkcyan")
+                                     title = "Top 5 Daerah dengan Persentase Rumah Tanpa Drainase Tertinggi",
+                                     x_label = "Persentase Rumah Tanpa Drainase (%)",
+                                     fill_low = "lightcoral", fill_high = "darkred")
           ggplotly(p, tooltip = "text")
         }
       }, error = function(e) {
@@ -371,7 +419,30 @@ berandaServer <- function(id, values) {
       })
     })
     
-    # Tabel Deskripsi Variabel
+    output$nosewer_line <- renderPlotly({
+      tryCatch({
+        data <- top5_nosewer_data()
+        if (is.null(data)) {
+          plotly::plot_ly() %>% 
+            plotly::add_text(text = "Data tidak tersedia", 
+                             x = 0.5, y = 0.5, showlegend = FALSE)
+        } else {
+          p <- create_top_n_line_chart(data,
+                                       value_col = "NOSEWER",
+                                       name_col = "CITY_NAME",
+                                       title = "Trend Persentase Rumah Tanpa Drainase",
+                                       x_label = "Kabupaten/Kota",
+                                       y_label = "Persentase Rumah Tanpa Drainase (%)")
+          ggplotly(p, tooltip = "text")
+        }
+      }, error = function(e) {
+        plotly::plot_ly() %>% 
+          plotly::add_text(text = paste("Error:", e$message), 
+                           x = 0.5, y = 0.5, showlegend = FALSE)
+      })
+    })
+    
+    # Tabel Deskripsi Variabel - DIPERBAIKI dengan variabel NODRAIN
     output$variable_descriptions_table <- renderTable({
       data.frame(
         Label = c("DISTRICTCODE", "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE",
@@ -381,8 +452,8 @@ berandaServer <- function(id, values) {
                      "Rumah Tangga Tanpa Listrik", "Pendidikan Rendah", "Pertumbuhan Populasi", "Kemiskinan", "Buta Huruf",
                      "Pelatihan Kesiapsiagaan Bencana", "Rentan Bencana", "Kepemilikan Rumah (Sewa)", "Drainase", "Sumber Air", "Populasi","Provinsi","Kabupaten/Kota"),
         Tipe_Data = c("String", "Numerik", "Numerik", "Numerik", "Numerik", "Numerik",
-                  "Numerik", "Numerik", "Numerik", "Numerik", "Numerik",
-                  "Numerik", "Numerik", "Numerik", "Numerik", "Numerik", "Numerik","String","String"),
+                      "Numerik", "Numerik", "Numerik", "Numerik", "Numerik",
+                      "Numerik", "Numerik", "Numerik", "Numerik", "Numerik", "Numerik","String","String"),
         Deskripsi = c(
           "Kode unik untuk wilayah/distrik di Indonesia",
           "Persentase populasi di bawah lima tahun",
