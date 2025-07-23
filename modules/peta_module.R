@@ -50,57 +50,50 @@ petaUI <- function(id) {
     ),
     
     # Layout dengan peta dan panel statistik 
-    fluidRow(
-      # Kolom peta (lebih besar dari sebelumnya)
-      column(
-        width = 8,
-        box(
-          title = "Peta Interaktif",
-          status = "success",
-          solidHeader = TRUE,
-          width = NULL,
-          height = "650px",
-          withSpinner(leafletOutput(ns("distribution_map"), height = "600px"))
-        )
-      ),
-      
-      # Kolom panel statistik detail 
-      column(
-        width = 4,
-        box(
-          title = "Statistik Detail Wilayah",
-          status = "info",
-          solidHeader = TRUE,
-          width = NULL,
-          height = "650px",
-          style = "overflow-y: auto;",
-          uiOutput(ns("district_info_panel"))
-        )
-      )
+    column(8,
+           box(
+             title = "Peta Interaktif",
+             status = "success",
+             solidHeader = TRUE,
+             width = NULL,
+             height = "650px",
+             withSpinner(leafletOutput(ns("distribution_map"), height = "600px"))
+           )
+    ),
+    
+    # Kolom panel statistik detail 
+    column(4,
+           box(
+             title = "Statistik Detail Wilayah",
+             status = "info",
+             solidHeader = TRUE,
+             width = NULL,
+             height = "650px",
+             style = "overflow-y: auto;",
+             uiOutput(ns("district_info_panel"))
+           )
     ),
     
     # Statistik Umum dan Interpretasi 
-    fluidRow(
-      column(4,
-             box(
-               title = "Statistik Spasial",
-               status = "warning",
-               solidHeader = TRUE,
-               width = NULL,
-               collapsible = TRUE,
-               withSpinner(tableOutput(ns("spatial_stats")))
-             )
-      ),
-      column(8,
-             box(
-               title = "Interpretasi Peta",
-               status = "warning", 
-               solidHeader = TRUE,
-               width = NULL,
-               collapsible = TRUE,
-               withSpinner(verbatimTextOutput(ns("map_interpretation")))
-             )
-      )
+    column(4,
+           box(
+             title = "Statistik Spasial",
+             status = "warning",
+             solidHeader = TRUE,
+             width = NULL,
+             collapsible = TRUE,
+             withSpinner(tableOutput(ns("spatial_stats")))
+           )
+    ),
+    column(8,
+           box(
+             title = "Interpretasi Peta",
+             status = "warning", 
+             solidHeader = TRUE,
+             width = NULL,
+             collapsible = TRUE,
+             withSpinner(verbatimTextOutput(ns("map_interpretation")))
+           )
     ),
     
     # Download section 

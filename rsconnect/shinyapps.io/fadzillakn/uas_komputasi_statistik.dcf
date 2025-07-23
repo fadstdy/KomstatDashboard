@@ -5,6 +5,6 @@ account: fadzillakn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 15110441
-bundleId: 10658041
+bundleId: 10659411
 url: https://fadzillakn.shinyapps.io/uas_komputasi_statistik/
 version: 1

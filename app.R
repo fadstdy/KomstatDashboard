@@ -24,7 +24,7 @@ library(sp)         # Untuk sp::merge() dan sp::proj4string()
 library(htmltools)
 
 # Sumber fungsi utilitas
-source("utils/helpers.R") 
+source("utils/helpers.R")
 
 # Sumber fungsi UI dan server modul
 source("modules/beranda_module.R")
@@ -36,7 +36,7 @@ source("modules/statistik_inferensia_module.R")
 source("modules/regresi_linear_module.R")
 
 # Pemuatan Data
-data_path <- "data/data_soviedit.csv" 
+data_path <- "data/data_soviedit.csv"
 
 # Periksa apakah file ada, jika tidak, berikan peringatan atau hentikan aplikasi
 if (!file.exists(data_path)) {
@@ -61,7 +61,7 @@ if ("CITY_NAME" %in% names(global_combined_data)) {
 
 # Definisi UI
 ui <- dashboardPage(
-  dashboardHeader(title = "Dashboard Analisis Statistik"),
+  dashboardHeader(title = "SOVI Dashboard"),
   
   dashboardSidebar(
     sidebarMenu(
@@ -104,11 +104,59 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
   
   # Nilai reaktif untuk menyimpan data saat ini (dimulai dengan data gabungan yang dimuat)
-  values <- reactiveValues(current_data = global_combined_data)
+  # Penting: Modul lain harus memperbarui nilai-nilai reaktif ini agar laporan lengkap berfungsi.
+  values <- reactiveValues(
+    current_data = global_combined_data,
+    exploration_results = reactiveValues(
+      interpretation = NULL,
+      descriptive_stats = NULL,
+      hist_plot = NULL,
+      boxplot_single_plot = NULL,
+      barplot_plot = NULL,
+      plot_grouped_boxplot = NULL,
+      plot_histogram_by_category = NULL,
+      plot_correlation_matrix = NULL,
+      ggplot_scatter = NULL,
+      plot_frequency_table_data = NULL
+    ),
+    transformation_results = reactiveValues( # Ini akan diisi oleh manajemen_data_module
+      after_data = NULL,
+      transformation_info = NULL,
+      before_data = NULL
+    ),
+    regression_results = reactiveValues(
+      model = NULL,
+      summary = NULL,
+      interpretation = NULL,
+      residuals = NULL,
+      shapiro_test = NULL,
+      vif = NULL,
+      bptest_result = NULL,
+      dwtest_result = NULL,
+      assumption_interpretation = NULL,
+      residual_hist_plot = NULL,
+      residual_qq_plot = NULL
+    ),
+    assumption_results = reactiveValues( # Ini akan diisi oleh uji_asumsi_module
+      test_output = NULL,
+      test_plot = NULL,
+      interpretation = NULL
+    ),
+    statistik_inferensia_results = reactiveValues( # Ini akan diisi oleh statistik_inferensia_module dan sub-modulnya
+      results = NULL,
+      plot = NULL,
+      interpretation = NULL,
+      test_type_run = NULL # Untuk mengetahui jenis uji terakhir yang dijalankan
+    ),
+    peta_results = reactiveValues( # Ini akan diisi oleh peta_module
+      interpretation = NULL,
+      merged_data = NULL
+    )
+  )
   
   # Panggil server modul
   berandaServer("beranda_tab", values)
-  manajemenDataServer("manajemen_data_tab", values) 
+  manajemenDataServer("manajemen_data_tab", values)
   eksplorasiDataServer("eksplorasi_data_tab", values)
   petaServer("peta_tab", values)
   ujiAsumsiServer("uji_asumsi_tab", values)

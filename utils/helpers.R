@@ -93,10 +93,10 @@ interpret_correlation <- function(r) {
 # Fungsi untuk menginterpretasikan uji normalitas
 interpret_normality <- function(p_value, alpha = 0.05) {
   if (p_value > alpha) {
-    return(paste0("Data berdistribusi normal (p-value = ", 
+    return(paste0("Data berdistribusi normal (p-value = ",
                   round(p_value, 4), " > ", alpha, ")"))
   } else {
-    return(paste0("Data tidak berdistribusi normal (p-value = ", 
+    return(paste0("Data tidak berdistribusi normal (p-value = ",
                   round(p_value, 4), " < ", alpha, ")"))
   }
 }
@@ -104,10 +104,10 @@ interpret_normality <- function(p_value, alpha = 0.05) {
 # Fungsi untuk menginterpretasikan uji homogenitas
 interpret_homogeneity <- function(p_value, alpha = 0.05) {
   if (p_value > alpha) {
-    return(paste0("Variansi homogen (p-value = ", 
+    return(paste0("Variansi homogen (p-value = ",
                   round(p_value, 4), " > ", alpha, ")"))
   } else {
-    return(paste0("Variansi tidak homogen (p-value = ", 
+    return(paste0("Variansi tidak homogen (p-value = ",
                   round(p_value, 4), " < ", alpha, ")"))
   }
 }
@@ -116,17 +116,17 @@ interpret_homogeneity <- function(p_value, alpha = 0.05) {
 interpret_t_test <- function(p_value, alternative, alpha = 0.05) {
   if (p_value < alpha) {
     if (alternative == "two.sided") {
-      return(paste0("Terdapat perbedaan yang signifikan (p-value = ", 
+      return(paste0("Terdapat perbedaan yang signifikan (p-value = ",
                     round(p_value, 4), " < ", alpha, ")"))
     } else if (alternative == "greater") {
-      return(paste0("Rata-rata kelompok pertama signifikan lebih besar (p-value = ", 
+      return(paste0("Rata-rata kelompok pertama signifikan lebih besar (p-value = ",
                     round(p_value, 4), " < ", alpha, ")"))
     } else {
-      return(paste0("Rata-rata kelompok pertama signifikan lebih kecil (p-value = ", 
+      return(paste0("Rata-rata kelompok pertama signifikan lebih kecil (p-value = ",
                     round(p_value, 4), " < ", alpha, ")"))
     }
   } else {
-    return(paste0("Tidak terdapat perbedaan yang signifikan (p-value = ", 
+    return(paste0("Tidak terdapat perbedaan yang signifikan (p-value = ",
                   round(p_value, 4), " > ", alpha, ")"))
   }
 }
@@ -135,17 +135,17 @@ interpret_t_test <- function(p_value, alternative, alpha = 0.05) {
 interpret_prop_test <- function(p_value, alternative, alpha = 0.05) {
   if (p_value < alpha) {
     if (alternative == "two.sided") {
-      return(paste0("Terdapat perbedaan proporsi yang signifikan (p-value = ", 
+      return(paste0("Terdapat perbedaan proporsi yang signifikan (p-value = ",
                     round(p_value, 4), " < ", alpha, ")"))
     } else if (alternative == "greater") {
-      return(paste0("Proporsi kelompok pertama signifikan lebih besar (p-value = ", 
+      return(paste0("Proporsi kelompok pertama signifikan lebih besar (p-value = ",
                     round(p_value, 4), " < ", alpha, ")"))
     } else {
-      return(paste0("Proporsi kelompok pertama signifikan lebih kecil (p-value = ", 
+      return(paste0("Proporsi kelompok pertama signifikan lebih kecil (p-value = ",
                     round(p_value, 4), " < ", alpha, ")"))
     }
   } else {
-    return(paste0("Tidak terdapat perbedaan proporsi yang signifikan (p-value = ", 
+    return(paste0("Tidak terdapat perbedaan proporsi yang signifikan (p-value = ",
                   round(p_value, 4), " > ", alpha, ")"))
   }
 }
@@ -154,10 +154,10 @@ interpret_prop_test <- function(p_value, alternative, alpha = 0.05) {
 # Fungsi untuk menginterpretasikan ANOVA
 interpret_anova <- function(p_value, alpha = 0.05) {
   if (p_value < alpha) {
-    return(paste0("Terdapat perbedaan rata-rata yang signifikan antar kelompok (p-value = ", 
+    return(paste0("Terdapat perbedaan rata-rata yang signifikan antar kelompok (p-value = ",
                   round(p_value, 4), " < ", alpha, ")"))
   } else {
-    return(paste0("Tidak terdapat perbedaan rata-rata yang signifikan antar kelompok (p-value = ", 
+    return(paste0("Tidak terdapat perbedaan rata-rata yang signifikan antar kelompok (p-value = ",
                   round(p_value, 4), " > ", alpha, ")"))
   }
 }
@@ -199,11 +199,11 @@ theme_custom <- function() {
       legend.text = element_text(size = 10),
       strip.text = element_text(size = 11, face = "bold"),
       panel.grid.minor = element_blank(),
-      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5) 
+      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5)
     )
 }
 
-# Fungsi untuk mendapatkan variabel numerik 
+# Fungsi untuk mendapatkan variabel numerik
 get_numeric_vars <- function(data) {
   names(data)[sapply(data, is.numeric)]
 }
@@ -214,7 +214,7 @@ get_categorical_vars <- function(data) {
   return(categorical_cols)
 }
 
-# Fungsi untuk menghitung statistik deskriptif dasar 
+# Fungsi untuk menghitung statistik deskriptif dasar
 calculate_basic_stats <- function(data, var_name) {
   if (!is.numeric(data[[var_name]])) {
     showNotification(paste0("Variabel '", var_name, "' bukan numerik. Statistik deskriptif tidak dapat dihitung."), type = "warning")
@@ -306,7 +306,7 @@ create_summary_table <- function(data, var_name) {
   
   # Format sebagai tabel yang rapi
   result <- data.frame(
-    Statistik = c("Mean", "Median", "Std Dev", "Min", "Max", "Q1", "Q3", "IQR", 
+    Statistik = c("Mean", "Median", "Std Dev", "Min", "Max", "Q1", "Q3", "IQR",
                   "Skewness", "Kurtosis", "N", "Missing"),
     Nilai = c(
       round(stats$Mean, 3),
@@ -337,9 +337,9 @@ interpret_regression_summary <- function(summary_obj) {
   r_squared <- summary_obj$r.squared
   adj_r_squared <- summary_obj$adj.r.squared
   f_statistic <- summary_obj$fstatistic[1]
-  f_p_value <- pf(summary_obj$fstatistic[1], 
-                  summary_obj$fstatistic[2], 
-                  summary_obj$fstatistic[3], 
+  f_p_value <- pf(summary_obj$fstatistic[1],
+                  summary_obj$fstatistic[2],
+                  summary_obj$fstatistic[3],
                   lower.tail = FALSE)
   
   coefficients <- summary_obj$coefficients
@@ -347,7 +347,7 @@ interpret_regression_summary <- function(summary_obj) {
   interpretation <- paste(
     "INTERPRETASI HASIL REGRESI LINEAR:\n\n",
     "Kebaikan Model:\n",
-    "- R-squared:", round(r_squared, 4), 
+    "- R-squared:", round(r_squared, 4),
     paste0("(", round(r_squared * 100, 2), "% variabilitas dijelaskan model)\n"),
     "- Adjusted R-squared:", round(adj_r_squared, 4), "\n",
     "- Interpretasi:", interpret_r_squared(r_squared), "\n\n",
@@ -355,7 +355,7 @@ interpret_regression_summary <- function(summary_obj) {
     "Uji Signifikansi Model Keseluruhan (F-test):\n",
     "- F-statistik:", round(f_statistic, 4), "\n",
     "- p-value:", format_p_value(f_p_value), "\n",
-    "- Kesimpulan:", 
+    "- Kesimpulan:",
     if (f_p_value < 0.05) {
       "Model secara keseluruhan signifikan (p < 0.05)"
     } else {
@@ -375,17 +375,17 @@ interpret_regression_summary <- function(summary_obj) {
                             "- ", var_name, ":\n",
                             "  Koefisien:", round(coef_value, 4), "\n",
                             "  p-value:", format_p_value(p_value), "\n",
-                            "  Signifikansi:", 
-                            if (p_value < 0.001) "*** (p < 0.001)" 
+                            "  Signifikansi:",
+                            if (p_value < 0.001) "*** (p < 0.001)"
                             else if (p_value < 0.01) "** (p < 0.01)"
                             else if (p_value < 0.05) "* (p < 0.05)"
                             else if (p_value < 0.1) ". (p < 0.1)"
                             else "tidak signifikan", "\n",
-                            "  Interpretasi:", 
+                            "  Interpretasi:",
                             if (var_name == "(Intercept)") {
                               paste("Nilai prediksi ketika semua variabel independen = 0")
                             } else {
-                              paste("Setiap peningkatan 1 unit", var_name, 
+                              paste("Setiap peningkatan 1 unit", var_name,
                                     ifelse(coef_value > 0, "akan meningkatkan", "akan menurunkan"),
                                     "variabel dependen sebesar", abs(round(coef_value, 4)), "unit")
                             }, "\n\n"
@@ -503,7 +503,7 @@ create_top_n_bar_plot <- function(data, value_col, name_col, title = "Top 5 Daer
   
   if (is.null(data) || nrow(data) == 0 || !(value_col %in% names(data)) || !(name_col %in% names(data))) {
     # Mengembalikan plot kosong dengan pesan
-    return(ggplot() + 
+    return(ggplot() +
              labs(title = paste0("Data untuk ", title, " tidak tersedia.")) +
              theme_void() +
              theme(plot.title = element_text(hjust = 0.5, size = plot_title_size, color = "gray50")))
@@ -531,7 +531,7 @@ create_top_n_line_chart <- function(data, value_col, name_col, title = "Top 5 Da
   
   if (is.null(data) || nrow(data) == 0 || !(value_col %in% names(data)) || !(name_col %in% names(data))) {
     # Mengembalikan plot kosong dengan pesan
-    return(ggplot() + 
+    return(ggplot() +
              labs(title = paste0("Data untuk ", title, " tidak tersedia.")) +
              theme_void() +
              theme(plot.title = element_text(hjust = 0.5, size = plot_title_size, color = "gray50")))
@@ -542,7 +542,7 @@ create_top_n_line_chart <- function(data, value_col, name_col, title = "Top 5 Da
     arrange(desc(.data[[value_col]])) %>%
     mutate(rank = 1:n()) # Membuat peringkat untuk sumbu X jika tidak ada variabel waktu
   
-  ggplot(data, aes(x = rank, y = .data[[value_col]], group = 1, 
+  ggplot(data, aes(x = rank, y = .data[[value_col]], group = 1,
                    text = paste0("Kabupaten/Kota: ", .data[[name_col]], "<br>",
                                  y_label, ": ", round(.data[[value_col]], 2)))) +
     geom_line(size = 1, color = "steelblue") +

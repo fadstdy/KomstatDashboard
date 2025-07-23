@@ -8,7 +8,7 @@ berandaUI <- function(id) {
     # Bagian Header
     column(12,
            box(
-             title = "Selamat Datang di Dashboard Analisis Statistik",
+             title = "Dashboard Analisis Statistik",
              status = "primary",
              solidHeader = TRUE,
              width = 12,
